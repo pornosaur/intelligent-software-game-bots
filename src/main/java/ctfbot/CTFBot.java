@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import ctfbot.coop.RoleManager;
 import ctfbot.tc.CTFCommItems;
 import ctfbot.tc.CTFCommObjectUpdates;
+import ctfbot.tc.msgs.TCRoleUpdate;
 import cz.cuni.amis.pathfinding.alg.astar.AStarResult;
 import cz.cuni.amis.pathfinding.map.IPFMapView;
 import cz.cuni.amis.pogamut.base.agent.navigation.IPathFuture;
@@ -123,7 +124,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     private CTFCommItems<CTFBot> commItems;
     private CTFCommObjectUpdates<CTFBot> commObjectUpdates;
 
-    private static RoleManager roleManager = new RoleManager();
+    private RoleManager roleManager = new RoleManager();
 
     // =============
     // BOT LIFECYCLE
@@ -185,6 +186,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         botInstance = BOT_COUNT.getAndIncrement();
 
         int targetTeam = AgentInfo.TEAM_RED;
+
         if (!START_BOTS_IN_SINGLE_TEAM) {
             targetTeam = botInstance % 2 == 0 ? AgentInfo.TEAM_RED : AgentInfo.TEAM_BLUE;
         }
@@ -217,6 +219,18 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     // ==========================
     // EVENT LISTENERS / HANDLERS
     // ==========================
+
+    /**
+     * Checking roles about bots in game. Especially when game started to get captain role!
+     *
+     * @param msg
+     */
+    @EventListener(eventClass = TCRoleUpdate.class)
+    public void roleUpdate(TCRoleUpdate msg) {
+        if (msg == null) return;
+
+        roleManager.compareAndSetCaptain(msg.getValue());
+    }
 
     /**
      * {@link PlayerDamaged} listener that senses that "some other bot was hurt".
@@ -444,7 +458,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
      */
     @Override
     public void beforeFirstLogic() {
-        roleManager.registerBot(this.info.getId());
+        askForCaptain();
     }
 
     private long lastLogicStartMillis = 0;
@@ -462,6 +476,12 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
      */
     @Override
     public void logic() {
+        if (roleManager.isAsked()) askForCaptain();
+
+        boolean cp = roleManager.isCaptain();
+        if (cp)
+            log.info("ID[" + info.getId() + "] is CAPTAIN!!!");
+
         long logicStartTime = System.currentTimeMillis();
         if (lastLogicStartMillis == 0) {
             lastLogicStartMillis = logicStartTime;
@@ -469,7 +489,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
             timeDelta = 1;
         } else {
             timeDelta = logicStartTime - lastLogicStartMillis;
-            log.info("===[ LOGIC ITERATION | Delta: " + (timeDelta) + "ms | Since last: " + (logicStartTime - lastLogicEndMillis) + "ms]===");
+          //  log.info("===[ LOGIC ITERATION | Delta: " + (timeDelta) + "ms | Since last: " + (logicStartTime - lastLogicEndMillis) + "ms]===");
             lastLogicStartMillis = logicStartTime;
         }
 
@@ -485,7 +505,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
                 log.warning("!!! DRAWING NAVMESH !!!");
                 navMeshModule.getNavMeshDraw().draw(true, true);
                 navmeshDrawn = true;
-                log.warning("NavMesh drawn, waiting a bit to finish the drawing...");
+             //   log.warning("NavMesh drawn, waiting a bit to finish the drawing...");
             }
         }
 
@@ -509,21 +529,21 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
             }
             navigation.navigate(navPoints.getRandomNavPoint());
             navigationPathDrawn = false;
-            log.info("RUNNING TO: " + navigation.getCurrentTarget());
+          //  log.info("RUNNING TO: " + navigation.getCurrentTarget());
 
         } catch (Exception e) {
             // MAKE SURE THAT YOUR BOT WON'T FAIL!
-            log.info(ExceptionToString.process(e));
+         //   log.info(ExceptionToString.process(e));
         } finally {
             // MAKE SURE THAT YOUR LOGIC DOES NOT TAKE MORE THAN 250 MS (Honestly, we have never seen anybody reaching even 150 ms per logic cycle...)
             // Note that it is perfectly OK, for instance, to count all path-distances between you and all possible pickup-points / items in the game
             // sort it and do some inference based on that.
             long timeSpentInLogic = System.currentTimeMillis() - logicStartTime;
-            log.info("Logic time:         " + timeSpentInLogic + " ms");
+          //  log.info("Logic time:         " + timeSpentInLogic + " ms");
             if (timeSpentInLogic >= 245) {
-                log.warning("!!! LOGIC TOO DEMANDING !!!");
+           //     log.warning("!!! LOGIC TOO DEMANDING !!!");
             }
-            log.info("===[ LOGIC END ]===");
+         //   log.info("===[ LOGIC END ]===");
             lastLogicEndMillis = System.currentTimeMillis();
         }
     }
@@ -705,6 +725,14 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         if (result == null || !result.isSuccess()) return null;
         PrecomputedPathFuture path = new PrecomputedPathFuture(startNavPoint, targetNavPoint, result.getPath());
         return path;
+    }
+
+    // ===========
+    // BOOT SYNCHRONIZATION
+    // ===========
+
+    private void askForCaptain() {
+        tcClient.sendToAll(roleManager.getCaptainAsk(info.getId()));
     }
 
     // ===========

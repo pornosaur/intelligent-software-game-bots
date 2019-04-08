@@ -1,64 +1,71 @@
 package ctfbot.coop;
 
+import ctfbot.tc.msgs.TCRoleUpdate;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
 
 public class RoleManager {
 
-    private static int MAX_ROLES = Roles.values().length;
+    private static final int MAX_RAND_VAL = Integer.MAX_VALUE;
 
-    private AtomicInteger actualPos;
+    private final Random RAND = new Random();
 
-    private Map<UnrealId, Roles> botRolesMap;
+    private static final int MAX_ROLES = Roles.values().length;
 
-    private UnrealId botCaptain;
+    private final int CAPTAIN_CHANCE;
+
+    private AtomicBoolean hasCaptain;
+
+    private AtomicBoolean alreadySetCaptain;
+
+    private AtomicLong askingTime;
+
+    private boolean asked;
+
 
     public RoleManager() {
-        this.botCaptain = UnrealId.NONE;
-        this.botRolesMap = new HashMap<>();
-        this.actualPos = new AtomicInteger(0);
+        this.CAPTAIN_CHANCE = RAND.nextInt(MAX_RAND_VAL);
+        this.hasCaptain = new AtomicBoolean(false);
+        this.alreadySetCaptain = new AtomicBoolean(false);
+        this.askingTime = new AtomicLong(-1);
+        this.asked = false;
     }
 
-    /**
-     * Assign (register) role for each bot.
-     *
-     * @param botID bot id.
-     * @return flag if the bot is also captain;
-     */
-    synchronized public boolean registerBot(final UnrealId botID) {
-        actualPos.compareAndSet(MAX_ROLES, 0);
-        final int pos = actualPos.getAndIncrement();
+    public TCRoleUpdate getCaptainAsk(final UnrealId sender) {
+        TCRoleUpdate role = new TCRoleUpdate(sender, CAPTAIN_CHANCE);
+        askingTime.set(role.getSimTime());
+        return role;
+    }
 
-        botRolesMap.put(botID, Roles.values()[pos]);
+    public boolean isAsked() {
+        return asked;
+    }
 
-        if (botCaptain == UnrealId.NONE) {
-            botCaptain = botID;
-            return true;
+    public long getAskingTime() {
+        return askingTime.get();
+    }
+
+    public void compareAndSetCaptain(int chance) {
+        if (chance < CAPTAIN_CHANCE) {
+            hasCaptain.set(true);
+        } else if (chance > CAPTAIN_CHANCE) {
+            hasCaptain.set(false);
+        } else {
+            if (!alreadySetCaptain.get()) {
+                alreadySetCaptain.set(true);
+                hasCaptain.set(true);
+            } else {
+                hasCaptain.set(false);
+            }
         }
 
-        return false;
     }
 
-    /**
-     * Check if the bot with ID is captain of team.
-     *
-     * @param botID bot id.
-     * @return true - the bot is captain, otherwise false.
-     */
-    boolean isCaptain(final UnrealId botID) {
-        return botID == botCaptain;
-    }
-
-    /**
-     * Get role of bot by his ID.
-     *
-     * @param botID bot ID.
-     * @return return role if the bot is registered, otherwise null.
-     */
-    Roles getRoleByID(final UnrealId botID) {
-        return botRolesMap.getOrDefault(botID, null);
+    public boolean isCaptain() {
+        return hasCaptain.get();
     }
 }
