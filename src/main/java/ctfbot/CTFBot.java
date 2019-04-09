@@ -458,7 +458,6 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
      */
     @Override
     public void beforeFirstLogic() {
-        askForCaptain();
     }
 
     private long lastLogicStartMillis = 0;
@@ -476,7 +475,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
      */
     @Override
     public void logic() {
-        if (roleManager.isAsked()) askForCaptain();
+        if (!roleManager.isAsked() && tcClient.isConnected()) askForCaptain();
 
         boolean cp = roleManager.isCaptain();
         if (cp)

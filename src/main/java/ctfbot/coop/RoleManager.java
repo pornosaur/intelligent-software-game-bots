@@ -22,8 +22,6 @@ public class RoleManager {
 
     private AtomicBoolean alreadySetCaptain;
 
-    private AtomicLong askingTime;
-
     private boolean asked;
 
 
@@ -31,22 +29,16 @@ public class RoleManager {
         this.CAPTAIN_CHANCE = RAND.nextInt(MAX_RAND_VAL);
         this.hasCaptain = new AtomicBoolean(false);
         this.alreadySetCaptain = new AtomicBoolean(false);
-        this.askingTime = new AtomicLong(-1);
         this.asked = false;
     }
 
     public TCRoleUpdate getCaptainAsk(final UnrealId sender) {
-        TCRoleUpdate role = new TCRoleUpdate(sender, CAPTAIN_CHANCE);
-        askingTime.set(role.getSimTime());
-        return role;
+        asked = true;
+        return new TCRoleUpdate(sender, CAPTAIN_CHANCE);
     }
 
     public boolean isAsked() {
         return asked;
-    }
-
-    public long getAskingTime() {
-        return askingTime.get();
     }
 
     public void compareAndSetCaptain(int chance) {
