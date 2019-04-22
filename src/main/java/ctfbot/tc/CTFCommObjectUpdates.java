@@ -4,7 +4,6 @@ import ctfbot.CTFBot;
 import ctfbot.tc.msgs.TCFlagUpdate;
 import ctfbot.tc.msgs.TCItemUpdate;
 import ctfbot.tc.msgs.TCPlayerUpdate;
-import ctfbot.tc.msgs.TCRoleUpdate;
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.AnnotationListenerRegistrator;
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.EventListener;
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.ObjectClassEventListener;

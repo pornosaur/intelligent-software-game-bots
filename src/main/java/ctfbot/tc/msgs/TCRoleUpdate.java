@@ -11,9 +11,9 @@ public class TCRoleUpdate extends TCMessageData {
 
     private final UnrealId sender;
 
-    private final int value;
+    private final double value;
 
-    public TCRoleUpdate(UnrealId player, int value) {
+    public TCRoleUpdate(UnrealId player, double value) {
         this.value = value;
         this.sender = player;
     }
@@ -22,7 +22,7 @@ public class TCRoleUpdate extends TCMessageData {
         return sender;
     }
 
-    public int getValue() {
+    public double getValue() {
         return value;
     }
 }
