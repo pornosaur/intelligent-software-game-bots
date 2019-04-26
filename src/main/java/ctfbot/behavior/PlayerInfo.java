@@ -44,7 +44,7 @@ public class PlayerInfo implements Comparable {
     public int compareTo(Object o) {
         PlayerInfo i = (PlayerInfo) o;
 
-        if (i.getDistance() < distance) {
+        if (i.getDistance() <= distance) {
             return -1;
         } else if (i.getDistance() > distance) {
             return 1;

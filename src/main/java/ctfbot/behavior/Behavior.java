@@ -34,9 +34,9 @@ public abstract class Behavior implements IBehavior, Comparable {
         Behavior b = (Behavior) o;
 
         if(priority < b.getPriority()){
-            return -1;
-        } else if (priority > b.getPriority()) {
             return 1;
+        } else if (priority > b.getPriority()) {
+            return -1;
         }
 
         return 0;

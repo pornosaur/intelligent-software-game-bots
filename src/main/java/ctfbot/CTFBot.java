@@ -5,7 +5,6 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 import ctfbot.behavior.*;
 import ctfbot.tc.CTFCommItems;
@@ -19,7 +18,6 @@ import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.Eve
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.ObjectClassEventListener;
 import cz.cuni.amis.pogamut.base.communication.worldview.object.event.WorldObjectUpdatedEvent;
 import cz.cuni.amis.pogamut.base.utils.guice.AgentScoped;
-import cz.cuni.amis.pogamut.base.utils.math.DistanceUtils;
 import cz.cuni.amis.pogamut.base3d.worldview.object.ILocated;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
@@ -27,22 +25,20 @@ import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.ManualControl;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.NavigationGraphBuilder;
 import cz.cuni.amis.pogamut.ut2004.agent.module.utils.UT2004Skins;
-import cz.cuni.amis.pogamut.ut2004.agent.navigation.NavigationState;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.UT2004MapTweaks;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.levelGeometry.RayCastResult;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.navmesh.NavMeshClearanceComputer.ClearanceLimit;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.navmesh.pathfollowing.NavMeshNavigation;
-import cz.cuni.amis.pogamut.ut2004.agent.navigation.stuckdetector.AccUT2004DistanceStuckDetector;
-import cz.cuni.amis.pogamut.ut2004.agent.navigation.stuckdetector.AccUT2004PositionStuckDetector;
-import cz.cuni.amis.pogamut.ut2004.agent.navigation.stuckdetector.AccUT2004TimeStuckDetector;
 import cz.cuni.amis.pogamut.ut2004.bot.impl.UT2004Bot;
 import cz.cuni.amis.pogamut.ut2004.bot.impl.UT2004BotModuleController;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbcommands.Initialize;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.*;
+import cz.cuni.amis.pogamut.ut2004.communication.translator.bot.BotFSM;
 import cz.cuni.amis.pogamut.ut2004.teamcomm.bot.UT2004BotTCController;
 import cz.cuni.amis.pogamut.ut2004.utils.UT2004BotRunner;
+import cz.cuni.amis.utils.Cooldown;
 import cz.cuni.amis.utils.ExceptionToString;
 import cz.cuni.amis.utils.collections.MyCollections;
 import cz.cuni.amis.utils.exception.PogamutException;
@@ -73,7 +69,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     /**
      * TRUE => draws navmesh and terminates
      */
-    public static final boolean DRAW_NAVMESH = true;
+    public static final boolean DRAW_NAVMESH = false;
     private static boolean navmeshDrawn = false;
 
     /**
@@ -84,7 +80,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     /**
      * Whether to draw navigation path; works only if you are running 1 bot...
      */
-    public static final boolean DRAW_NAVIGATION_PATH = false;
+    public static final boolean DRAW_NAVIGATION_PATH = true;
     private boolean navigationPathDrawn = false;
 
     /**
@@ -128,6 +124,9 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     private List<PlayerInfo> myPlayers;
     private List<PlayerInfo> seenEnemies;
 
+
+    private Cooldown sendingLocationCD;
+
     private ManualControl manualControl;
     private boolean lastManualActive = false;
     private long lastLogicTime = -1;
@@ -152,10 +151,28 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         seenEnemies = new ArrayList<>();
 
 
-        navigation.getPathExecutor().addStuckDetector(new AccUT2004TimeStuckDetector(bot, 1500, 3000));
+        sendingLocationCD = new Cooldown(2000);
+        sendingLocationCD.use();
+
+
+        /*navigation.getPathExecutor().addStuckDetector(new AccUT2004TimeStuckDetector(bot, 1500, 3000));
         navigation.getPathExecutor().addStuckDetector(new AccUT2004PositionStuckDetector(bot));
         navigation.getPathExecutor().addStuckDetector(new AccUT2004DistanceStuckDetector(bot));
+*/
+        // MOVING BEHAVIORS
+        behaviorManager.suggestBehavior(new StoleFlag(this));
+        behaviorManager.suggestBehavior(new BackFlag(this));
+        behaviorManager.suggestBehavior(new CollectItem(this));
+        //-------------------
 
+        // FOCUSING BEHAVIORS
+        behaviorManager.suggestBehavior(new FocusEnemy(this));
+        behaviorManager.suggestBehavior(new FocusPath(this));
+        //-------------------
+
+        // FIRING BEHAVIORS
+        behaviorManager.suggestBehavior(new FireEnemy(this));
+        //-------------------
 
     }
 
@@ -190,41 +207,18 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     @Override
     public void mapInfoObtained() {
         // See {@link MapTweaks} for details; add tweaks in there if required.
+
+        /*mapTweaks.register("CTF-Maul", new UT2004MapTweaks.IMapTweak() {
+                    @Override
+                    public void tweak(NavigationGraphBuilder navigationGraphBuilder) {
+                            MapTweaks.tweakCTFMaul(navBuilder);
+                    }
+                }
+
+        );*/
+
         MapTweaks.tweak(navBuilder);
         navMeshModule.setReloadNavMesh(UPDATE_NAVMESH);
-
-        // DELETE unavailable paths for bot
-        mapTweaks.register("CTF-Maul", navigationGraphBuilder -> {
-            navBuilder.removeEdge("CTF-Maul.PlayerStart8", "CTF-Maul.JumpSpot2");
-            navBuilder.removeEdge("CTF-Maul.InventorySpot807", "CTF-Maul.JumpSpot2");
-            navBuilder.removeEdge("CTF-Maul.PathNode92", "CTF-Maul.JumpSpot2");
-            navBuilder.removeEdge("CTF-Maul.PathNode66", "CTF-Maul.JumpSpot2");
-            navBuilder.removeEdge("CTF-Maul.PathNode67", "CTF-Maul.JumpSpot2");
-            navBuilder.removeEdge("CTF-Maul.PathNode66", "CTF-Maul.JumpSpot18");
-            navBuilder.removeEdge("CTF-Maul.PathNode93", "CTF-Maul.JumpSpot18");
-            navBuilder.removeEdge("CTF-Maul.PathNode67", "CTF-Maul.JumpSpot18");
-            navBuilder.removeEdge("CTF-Maul.PathNode76", "CTF-Maul.JumpSpot18");
-            navBuilder.removeEdge("CTF-Maul.PathNode95", "CTF-Maul.JumpSpot18");
-            navBuilder.removeEdge("CTF-Maul.PathNode67", "CTF-Maul.JumpSpot3");
-            navBuilder.removeEdge("CTF-Maul.PathNode77", "CTF-Maul.JumpSpot3");
-            navBuilder.removeEdge("CTF-Maul.PathNode95", "CTF-Maul.JumpSpot3");
-            navBuilder.removeEdge("CTF-Maul.PathNode78", "CTF-Maul.JumpSpot3");
-            navBuilder.removeEdge("CTF-Maul.PathNode96", "CTF-Maul.JumpSpot3");
-            navBuilder.removeEdge("CTF-Maul.PathNode10", "CTF-Maul.JumpSpot6");
-            navBuilder.removeEdge("CTF-Maul.PathNode12", "CTF-Maul.JumpSpot6");
-            navBuilder.removeEdge("CTF-Maul.PathNode143", "CTF-Maul.JumpSpot6");
-            navBuilder.removeEdge("CTF-Maul.PathNode63", "CTF-Maul.JumpSpot6");
-            navBuilder.removeEdge("CTF-Maul.PathNode142", "CTF-Maul.JumpSpot6");
-            navBuilder.removeEdge("CTF-Maul.PathNode10", "CTF-Maul.JumpSpot20");
-            navBuilder.removeEdge("CTF-Maul.PathNode63", "CTF-Maul.JumpSpot20");
-            navBuilder.removeEdge("CTF-Maul.PathNode6", "CTF-Maul.JumpSpot20");
-            navBuilder.removeEdge("CTF-Maul.PathNode64", "CTF-Maul.JumpSpot20");
-            navBuilder.removeEdge("CTF-Maul.InventorySpot801", "CTF-Maul.JumpSpot20");
-            navBuilder.removeEdge("CTF-Maul.PlayerStart1", "CTF-Maul.JumpSpot7");
-            navBuilder.removeEdge("CTF-Maul.InventorySpot801", "CTF-Maul.JumpSpot7");
-            navBuilder.removeEdge("CTF-Maul.PathNode48", "CTF-Maul.JumpSpot7");
-            navBuilder.removeEdge("CTF-Maul.PathNode64", "CTF-Maul.JumpSpot7");
-        });
     }
 
     /**
@@ -244,6 +238,8 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         weaponPrefs.addGeneralPref(UT2004ItemType.FLAK_CANNON, false);
         weaponPrefs.addGeneralPref(UT2004ItemType.FLAK_CANNON, true);
         weaponPrefs.addGeneralPref(UT2004ItemType.BIO_RIFLE, true);
+
+       // weaponPrefs.newPrefsRange()
     }
 
     @Override
@@ -454,7 +450,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         ItemType itemType = event.getType();
         ItemType.Group itemGroup = itemType.getGroup();
         ItemType.Category itemCategory = itemType.getCategory();
-        log.info("PICKED " + itemCategory.name + ": " + itemType.getName() + " [group=" + itemGroup.getName() + "]");
+        //   log.info("PICKED " + itemCategory.name + ": " + itemType.getName() + " [group=" + itemGroup.getName() + "]");
     }
 
     /**
@@ -465,7 +461,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     @ObjectClassEventListener(objectClass = IncomingProjectile.class, eventClass = WorldObjectUpdatedEvent.class)
     public void incomingProjectileUpdated(WorldObjectUpdatedEvent<IncomingProjectile> event) {
         IncomingProjectile projectile = event.getObject();
-        log.info("PROJECTILE UPDATED: " + projectile);
+        // log.info("PROJECTILE UPDATED: " + projectile);
     }
 
     /**
@@ -482,7 +478,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
             return;
         }
         Player player = event.getObject();
-        log.info("PLAYER UPDATED: " + player.getId().getStringId());
+        //  log.info("PLAYER UPDATED: " + player.getId().getStringId());
     }
 
     /**
@@ -497,7 +493,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
             return;
         }
         Item item = event.getObject();
-        log.info("ITEM UPDATED: " + item.getId().getStringId());
+        //   log.info("ITEM UPDATED: " + item.getId().getStringId());
     }
 
     /**
@@ -507,7 +503,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
      */
     @ObjectClassEventListener(objectClass = FlagInfo.class, eventClass = WorldObjectUpdatedEvent.class)
     public void flagInfoUpdated(WorldObjectUpdatedEvent<FlagInfo> event) {
-        log.info("FLAG INFO UPDATED: " + event.getObject());
+        //   log.info("FLAG INFO UPDATED: " + event.getObject());
 
        /* if (ctf.isBotCarryingEnemyFlag())
             flagHolder = event.getObject().getHolder();*/
@@ -558,7 +554,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         long selfUpdateStartMillis = System.currentTimeMillis();
         selfTimeDelta = selfUpdateStartMillis - selfLastUpdateStartMillis;
         selfLastUpdateStartMillis = selfUpdateStartMillis;
-        log.info("---[ SELF UPDATE | D: " + (selfTimeDelta) + "ms ]---");
+        //  log.info("---[ SELF UPDATE | D: " + (selfTimeDelta) + "ms ]---");
 
         try {
 
@@ -586,7 +582,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     public void beforeFirstLogic() {
 
 
-        this.navigation.addStrongNavigationListener(
+       /* this.navigation.addStrongNavigationListener(
                 new FlagListener<NavigationState>() {
                     @Override
                     public void flagChanged(NavigationState changedValue) {
@@ -597,9 +593,6 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
                                 ++targetItemStuck;
 
                                 if (targetItemStuck >= 3) {
-                                   /* if (loc.equals(ctf.getOurBase())) {
-
-                                    }*/
 
                                     // log.info("TABOO [stuck]: " + targetItem.getId() + " / " + targetItem.getType());
                                     // forbiddenItems.add(targetItem, 10);
@@ -620,7 +613,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
                                 break;
                         }
                     }
-                });
+                });*/
     }
 
     private long lastLogicStartMillis = 0;
@@ -640,11 +633,12 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     public void logic() {
         if (tcClient.isConnected()) {
             double distance = aStar.getDistance(info.getNearestNavPoint(), ctf.getEnemyBase());
+            //double distance = navMeshModule.getAStarPathPlanner().getDistance(info.getLocation(), ctf.getEnemyBase());
             askForCaptain(distance);
         }
 
 
-        log.log(Level.INFO, "_________________________" + info.getName() + "---->" + this.amIFlager());
+      //  log.log(Level.INFO, "_________________________" + info.getName() + "---->" + this.amIFlager());
 
         if (players.canSeeEnemies()) {
             for (Map.Entry<UnrealId, Player> p : players.getVisibleEnemies().entrySet()) {
@@ -659,7 +653,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
 
         //TODO impl. special methods for each action!!!
         //--------------MOVING--------------
-        if (info.getTeam() == AgentInfo.TEAM_BLUE) {
+      /*  if (info.getTeam() == AgentInfo.TEAM_BLUE) {
             //  if (!ctf.isOurTeamCarryingEnemyFlag()) {
             behaviorManager.suggestBehavior(new StoleFlag(this, 100));
             //} else {
@@ -699,10 +693,12 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
             }
             // }
             //---------------------------------
+        }*/
+
+        if (info.getTeam() == AgentInfo.TEAM_BLUE && !myPlayers.isEmpty()) {
+            behaviorManager.execute();
         }
 
-
-        behaviorManager.execute();
 
         long logicStartTime = System.currentTimeMillis();
         if (lastLogicStartMillis == 0) {
@@ -715,7 +711,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
             lastLogicStartMillis = logicStartTime;
         }
 
-       /*if (DRAW_NAVMESH && botInstance == 0) {
+        if (DRAW_NAVMESH && botInstance == 0) {
             boolean drawNavmesh = false;
             synchronized (CLASS_MUTEX) {
                 if (!navmeshDrawn) {
@@ -729,7 +725,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
                 navmeshDrawn = true;
                 //   log.warning("NavMesh drawn, waiting a bit to finish the drawing...");
             }
-        }*/
+        }
 
         try {
             // LOG VARIOUS INTERESTING VALUES
@@ -914,19 +910,6 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         return true;
     }
 
-    public boolean navigateAStarPath(PrecomputedPathFuture<ILocated> path, NavPoint targetNavPoint) {
-        if (lastAStarTarget == targetNavPoint) {
-            if (navigation.isNavigating()) return true;
-        }
-        if (path == null) {
-            navigation.stopNavigation();
-            return false;
-        }
-        lastAStarTarget = targetNavPoint;
-        navigation.navigate(path);
-        return true;
-    }
-
     private IPFMapView<NavPoint> mapView = new IPFMapView<NavPoint>() {
 
         @Override
@@ -968,11 +951,14 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     // ===========
 
     private void askForCaptain(double distance) {
+        //if (sendingLocationCD.isHot()) return;
         tcClient.sendToTeam(new TCRoleUpdate(info.getId(), distance));
+       // sendingLocationCD.use();
     }
 
     public boolean amIFlager() {
-        return (!myPlayers.isEmpty() && myPlayers.get(0).getId().equals(info.getId()));
+        if (myPlayers.isEmpty()) return false;
+        return myPlayers.get(0).getId().equals(info.getId());
     }
 
     public boolean amIFlagHolder() {
@@ -981,6 +967,13 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
 
     public boolean amIDefender() {
         return (!myPlayers.isEmpty() && myPlayers.get(myPlayers.size() - 1).getId().equals(info.getId()));
+    }
+
+    public boolean isFarFromBase(Item item) {
+        //TODO make a constant of DISTANCE
+        //TODO need to consider teleport!!! if use Euc. distance!!!
+        if (item == null) return false;
+        return (aStar.getDistance(ctf.getOurBase(), item.getNavPoint()) > 6100);
     }
 
 

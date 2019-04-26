@@ -1,40 +1,37 @@
 package ctfbot.behavior;
 
 import ctfbot.CTFBot;
-import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 
-public class FocusPath extends Behavior {
+public class FireEnemy extends Behavior {
 
-    private Location forcedFocus;
-
-    public FocusPath(CTFBot bot) {
-        this(bot, 0, null);
-    }
-
-    public FocusPath(CTFBot bot, double priority, Location location) {
-        super(bot, priority, Action.FOCUS);
-        this.forcedFocus = location;
+    public FireEnemy(CTFBot bot) {
+        super(bot, 0, Action.FIRE);
     }
 
     @Override
     public boolean isFiring() {
         double healthRatio = ctx.getInfo().getHealth() / ctx.getInfo().game.getFullHealth();
-        if (ctx.amIFlagHolder() && (healthRatio <= 0.35)) return false;
-        if (!ctx.getPlayers().canSeeEnemies()) return true;
-
+        if (/*ctx.amIFlagHolder() &&*/ (healthRatio <= 2)) {
+            ctx.getWeaponry().changeWeapon(UT2004ItemType.SHIELD_GUN);
+            return true;
+        }
         return false;
     }
 
     @Override
     public Behavior run() {
-        if (ctx.getNavigation().isNavigating()) ctx.getNavigation().setFocus(forcedFocus);
-        else if (forcedFocus != null) ctx.getMove().turnTo(forcedFocus);
-
+        ctx.getShoot().shootSecondary();
         return this;
     }
 
     @Override
     public Behavior terminate() {
+        //if (ctx.getPlayers().canSeeEnemies()) return this;
+
+        if (ctx.getInfo().isShooting() && ctx.getWeaponry().hasAmmoForWeapon(ctx.getWeaponry().getCurrentWeapon().getType()))
+            return this;
+        // ctx.getShoot().stopShooting();
         return null;
     }
 

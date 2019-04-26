@@ -5,8 +5,8 @@ import ctfbot.CTFBot;
 
 public class BackFlag extends Behavior {
 
-    public BackFlag(CTFBot bot, double priority) {
-        super(bot, priority, Action.MOVE);
+    public BackFlag(CTFBot bot) {
+        super(bot, 0, Action.MOVE);
     }
 
     @Override
@@ -33,7 +33,15 @@ public class BackFlag extends Behavior {
 
     @Override
     public boolean mayTransition(Behavior toThiBehavior) {
-        return (toThiBehavior instanceof StoleFlag) && !ctx.getCTF().isOurTeamCarryingEnemyFlag();
+        boolean returnBeh = false;
+        if ((toThiBehavior instanceof StoleFlag) && !ctx.getCTF().isOurTeamCarryingEnemyFlag()) {
+            returnBeh = true;
+        }
+
+        //TODO make getBehaviorType!!!
+        if ((toThiBehavior instanceof CollectItem)) returnBeh = true;
+
+        return returnBeh;
     }
 
     @Override

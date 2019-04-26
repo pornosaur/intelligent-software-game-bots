@@ -2,25 +2,31 @@ package ctfbot.behavior;
 
 import ctfbot.CTFBot;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.logging.Level;
 
 public class BehaviorManager<BOTCTRL extends CTFBot> {
 
     private BOTCTRL ctx;
 
-    private Queue<Behavior> behaviorList;
+    private List<Behavior> behaviors;
 
-    private Behavior runningList[];
+    private Queue<Behavior> nextBehaviors;
+
+    private Behavior runningBehaviors[];
 
     public BehaviorManager(BOTCTRL ctx) {
         this.ctx = ctx;
-        this.behaviorList = new PriorityQueue<>();
-        this.runningList = new Behavior[]{null, null, null};
+        this.behaviors = new ArrayList<>();
+        this.nextBehaviors = new PriorityQueue<>();
+        this.runningBehaviors = new Behavior[]{null, null, null};
     }
 
     public void suggestBehavior(Behavior behavior) {
-        if (behavior.isFiring()) behaviorList.add(behavior);
+        if (!behaviors.contains(behavior)) behaviors.add(behavior);
     }
 
     public void execute() {
@@ -28,13 +34,13 @@ public class BehaviorManager<BOTCTRL extends CTFBot> {
     }
 
     private void prepareBehaviorNew() {
-        for (Behavior b : runningList) {
-            if (b != null) behaviorList.add(b);
+        for (Behavior b : behaviors) {
+            if (b.isFiring()) nextBehaviors.add(b);
         }
 
         Behavior preparedByAction[] = {null, null, null};
         for (int i = 0; i < Action.values().length; i++) {
-            for (Behavior b : behaviorList) {
+            for (Behavior b : nextBehaviors) {
                 if (b.getAction() == Action.values()[i]) {
                     preparedByAction[i] = b;
                     break;
@@ -42,36 +48,29 @@ public class BehaviorManager<BOTCTRL extends CTFBot> {
             }
         }
 
-        for (int i = 0; i < preparedByAction.length; i++) {
-            Behavior b = preparedByAction[i], bRunning = runningList[i];
+        for (int i = 0; i < Action.values().length; i++) {
+            Behavior nextB = preparedByAction[i], runningB = runningBehaviors[i];
 
-            if (bRunning != null) {
-                boolean sameInstance = bRunning == b;
-                if (bRunning.mayTransition(b)) {
-                    runningList[i] = bRunning.transition(b);
+            if (runningB != null) {
+                if (runningB.mayTransition(nextB)) {
+                    runningBehaviors[i] = runningB.transition(nextB);
                 } else {
-                    bRunning = bRunning.terminate();
-                    if (bRunning == null) {
-                        if (sameInstance) {
-                            runningList[i] = null;
-                        } else {
-                            runningList[i] = b;
-                            if (b != null) b.run();
-                        }
-                    }
+                    runningBehaviors[i] = runningB.terminate();
+                    if (runningBehaviors[i] == null && nextB != null)
+                        runningBehaviors[i] = nextB.run();
+
                 }
-            } else {
-                runningList[i] = b;
-                if (b != null) b.run();
+            } else if (nextB != null) {
+                runningBehaviors[i] = nextB.run();
             }
         }
 
-        behaviorList.clear();
+        nextBehaviors.clear();
     }
 
     public void cleanUp() {
         //TODO FORCED TERMINATE!!
-        runningList = new Behavior[]{null, null, null};
-        behaviorList.clear();
+        runningBehaviors = new Behavior[]{null, null, null};
+        nextBehaviors.clear();
     }
 }

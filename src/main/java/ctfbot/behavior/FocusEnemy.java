@@ -7,8 +7,8 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 public class FocusEnemy extends Behavior {
 
 
-    public FocusEnemy(CTFBot bot, double priority) {
-        super(bot, priority, Action.FOCUS);
+    public FocusEnemy(CTFBot bot) {
+        super(bot, 0, Action.FOCUS);
     }
 
 

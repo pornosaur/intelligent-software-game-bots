@@ -73,7 +73,7 @@ public class CTFCommObjectUpdates<BOTCTRL extends CTFBot> {
         // CONSTRUCT UPDATE MESSAGE
         FlagInfo update = msg.getUpdate(flag);
 
-        log.info("Updating FLAG: " + update);
+       // log.info("Updating FLAG: " + update);
 
         // NOTIFY WORLDVIEW, IMMEDIATELY TRIGGERING ALL RELEVANT LISTENERS
         ctx.getWorldView().notifyImmediately(update);
@@ -101,7 +101,7 @@ public class CTFCommObjectUpdates<BOTCTRL extends CTFBot> {
         // CONSTRUCT UPDATE MESSAGE
         NavPoint update = msg.getUpdate(item, item.getNavPoint());
 
-        log.info("Updating ITEM NAVPOINT: " + update);
+       // log.info("Updating ITEM NAVPOINT: " + update);
 
         // NOTIFY WORLDVIEW, IMMEDIATELY TRIGGERING ALL RELEVANT LISTENERS
         ctx.getWorldView().notifyImmediately(update);
@@ -126,8 +126,8 @@ public class CTFCommObjectUpdates<BOTCTRL extends CTFBot> {
         // CONSTRUCT UPDATE MESSAGE
         Player update = msg.getUpdate(player);
 
-        log.info("Updating PLAYER: " + update);
-
+     //   log.info("Updating PLAYER: " + update);
+//
         // NOTIFY WORLDVIEW, IMMEDIATELY TRIGGERING ALL RELEVANT LISTENERS
         ctx.getWorldView().notifyImmediately(update);
     }
@@ -135,15 +135,15 @@ public class CTFCommObjectUpdates<BOTCTRL extends CTFBot> {
     @EventListener(eventClass = TCInfoBotJoined.class)
     public void botJoined(TCInfoBotJoined botJoined) {
         if (botJoined.getTeam() != ctx.getInfo().getTeam()) {
-            log.info("Bot joined: " + botJoined.getBotId() + " but to different team.");
+           // log.info("Bot joined: " + botJoined.getBotId() + " but to different team.");
             return;
         } else {
-            log.info("Bot joined: " + botJoined.getBotId() + " to my team!");
+           // log.info("Bot joined: " + botJoined.getBotId() + " to my team!");
         }
         // NEW BOT JOINED
         // => send actual infos what you know
 
-        log.info("Sending object info to: " + botJoined.getBotId());
+      //  log.info("Sending object info to: " + botJoined.getBotId());
 
         sendMe(botJoined.getBotId());
         sendItems(botJoined.getBotId());
