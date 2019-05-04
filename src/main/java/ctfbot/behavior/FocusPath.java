@@ -2,8 +2,11 @@ package ctfbot.behavior;
 
 import ctfbot.CTFBot;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
+import cz.cuni.amis.utils.Cooldown;
 
 public class FocusPath extends Behavior {
+
+    static private final double HEALTH_RATIO = 0.35;
 
     private Location forcedFocus;
 
@@ -14,15 +17,18 @@ public class FocusPath extends Behavior {
     public FocusPath(CTFBot bot, double priority, Location location) {
         super(bot, priority, Action.FOCUS);
         this.forcedFocus = location;
+
+        this.expiration = new Cooldown(2000);
+        this.expiration.use();
     }
 
     @Override
     public boolean isFiring() {
         double healthRatio = ctx.getInfo().getHealth() / ctx.getInfo().game.getFullHealth();
-        if (ctx.amIFlagHolder() && (healthRatio <= 0.35)) return false;
+        if (ctx.amIFlagHolder() && (healthRatio <= HEALTH_RATIO)) return false;
         if (!ctx.getPlayers().canSeeEnemies()) return true;
 
-        return false;
+        return true;
     }
 
     @Override

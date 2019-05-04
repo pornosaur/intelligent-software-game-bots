@@ -14,8 +14,8 @@ public class StoleFlag extends Behavior {
     @Override
     public boolean isFiring() {
         if (!ctx.amIFlager() || ctx.amIFlagHolder()) return false;
-        if (!ctx.getCTF().isEnemyFlagHome()) return false;
-
+//        if (!ctx.getCTF().isEnemyFlagHome()) return false;        //TODO: Think about this behavior!
+        //TODO: If score is good, will make better freedom
         priority = 100;
         return true;
     }
@@ -24,6 +24,7 @@ public class StoleFlag extends Behavior {
     public Behavior run() {
         ctx.getLog().log(Level.INFO, "_____NAVIGATION STOLE FLAG STARTED______");
         ctx.navigateAStarPath(ctx.getCTF().getEnemyBase());
+
         return this;
     }
 
@@ -43,14 +44,18 @@ public class StoleFlag extends Behavior {
         if (toThiBehavior == null) return false;
 
         boolean returnBeh = false;
-        if((toThiBehavior instanceof BackFlag) && ctx.amIFlagHolder()) {
+        if ((toThiBehavior instanceof BackFlag) && ctx.amIFlagHolder()) {
             returnBeh = true;
         }
 
-        if ((toThiBehavior instanceof CollectItem)) {
-               returnBeh = true;
-
+        if ((toThiBehavior instanceof CollectItem) && !ctx.getCTF().isOurFlagDropped()) {
+            returnBeh = true;
         }
+
+        if ((toThiBehavior instanceof GetFlag)) {
+            return true;
+        }
+
         return returnBeh;
     }
 

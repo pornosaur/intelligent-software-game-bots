@@ -1,6 +1,7 @@
 package ctfbot.behavior;
 
 import ctfbot.CTFBot;
+import cz.cuni.amis.utils.Cooldown;
 
 public abstract class Behavior implements IBehavior, Comparable {
 
@@ -8,15 +9,19 @@ public abstract class Behavior implements IBehavior, Comparable {
 
     protected double priority;
 
-    protected Behavior transition;
-
     private Action action;
+
+    protected Cooldown expiration;
 
     public Behavior(CTFBot bot, double priority, Action action) {
         this.ctx = bot;
         this.priority = priority;
         this.action = action;
-        this.transition = null;
+        this.expiration = null;
+    }
+
+    public boolean isExpirated() {
+        return expiration != null && expiration.isCool();
     }
 
     @Override
@@ -33,7 +38,7 @@ public abstract class Behavior implements IBehavior, Comparable {
     public int compareTo(Object o) {
         Behavior b = (Behavior) o;
 
-        if(priority < b.getPriority()){
+        if (priority < b.getPriority()) {
             return 1;
         } else if (priority > b.getPriority()) {
             return -1;

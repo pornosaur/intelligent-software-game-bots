@@ -2,10 +2,8 @@ package ctfbot.behavior;
 
 import ctfbot.CTFBot;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 public class BehaviorManager<BOTCTRL extends CTFBot> {
@@ -18,11 +16,14 @@ public class BehaviorManager<BOTCTRL extends CTFBot> {
 
     private Behavior runningBehaviors[];
 
+    private final Object MUTEX;
+
     public BehaviorManager(BOTCTRL ctx) {
         this.ctx = ctx;
         this.behaviors = new ArrayList<>();
         this.nextBehaviors = new PriorityQueue<>();
         this.runningBehaviors = new Behavior[]{null, null, null};
+        this.MUTEX = new Object();
     }
 
     public void suggestBehavior(Behavior behavior) {
@@ -34,7 +35,13 @@ public class BehaviorManager<BOTCTRL extends CTFBot> {
     }
 
     private void prepareBehaviorNew() {
-        for (Behavior b : behaviors) {
+        Iterator it = behaviors.iterator();
+        while (it.hasNext()) {
+            Behavior b = (Behavior) it.next();
+            if (b.isExpirated()) {
+                it.remove();
+                continue;
+            }
             if (b.isFiring()) nextBehaviors.add(b);
         }
 
@@ -43,25 +50,27 @@ public class BehaviorManager<BOTCTRL extends CTFBot> {
             for (Behavior b : nextBehaviors) {
                 if (b.getAction() == Action.values()[i]) {
                     preparedByAction[i] = b;
-                    break;
+                    break; //TODO: think about this
                 }
             }
         }
 
-        for (int i = 0; i < Action.values().length; i++) {
-            Behavior nextB = preparedByAction[i], runningB = runningBehaviors[i];
+        synchronized (MUTEX) {
+            for (int i = 0; i < Action.values().length; i++) {
+                Behavior nextB = preparedByAction[i], runningB = runningBehaviors[i];
 
-            if (runningB != null) {
-                if (runningB.mayTransition(nextB)) {
-                    runningBehaviors[i] = runningB.transition(nextB);
-                } else {
-                    runningBehaviors[i] = runningB.terminate();
-                    if (runningBehaviors[i] == null && nextB != null)
-                        runningBehaviors[i] = nextB.run();
-
+                if (runningB != null) {
+                    if (runningB.mayTransition(nextB)) {
+                        runningBehaviors[i] = runningB.transition(nextB);
+                    } else {
+                        runningBehaviors[i] = runningB.terminate();
+                        if (runningBehaviors[i] == null && nextB != null) {
+                            runningBehaviors[i] = nextB.run();
+                        }
+                    }
+                } else if (nextB != null) {
+                    runningBehaviors[i] = nextB.run();
                 }
-            } else if (nextB != null) {
-                runningBehaviors[i] = nextB.run();
             }
         }
 
@@ -72,5 +81,13 @@ public class BehaviorManager<BOTCTRL extends CTFBot> {
         //TODO FORCED TERMINATE!!
         runningBehaviors = new Behavior[]{null, null, null};
         nextBehaviors.clear();
+    }
+
+    public void resetMoveAction() {
+        synchronized (MUTEX) {
+            runningBehaviors[Action.MOVE.ordinal()] = null;
+            ctx.getNavigation().stopNavigation();
+            ctx.getLog().log(Level.INFO, "----------------RESET MOVE ACTION-------------------");
+        }
     }
 }

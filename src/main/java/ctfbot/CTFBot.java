@@ -25,6 +25,7 @@ import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.ManualControl;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.NavigationGraphBuilder;
 import cz.cuni.amis.pogamut.ut2004.agent.module.utils.UT2004Skins;
+import cz.cuni.amis.pogamut.ut2004.agent.navigation.NavigationState;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.UT2004MapTweaks;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.levelGeometry.RayCastResult;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.navmesh.NavMeshClearanceComputer.ClearanceLimit;
@@ -124,6 +125,8 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     private List<PlayerInfo> myPlayers;
     private List<PlayerInfo> seenEnemies;
 
+    private Location ourFlagLoc = null;
+    private Location enemyFlagLoc = null;
 
     private Cooldown sendingLocationCD;
 
@@ -163,6 +166,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         behaviorManager.suggestBehavior(new StoleFlag(this));
         behaviorManager.suggestBehavior(new BackFlag(this));
         behaviorManager.suggestBehavior(new CollectItem(this));
+        behaviorManager.suggestBehavior(new GetFlag(this));
         //-------------------
 
         // FOCUSING BEHAVIORS
@@ -207,16 +211,6 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     @Override
     public void mapInfoObtained() {
         // See {@link MapTweaks} for details; add tweaks in there if required.
-
-        /*mapTweaks.register("CTF-Maul", new UT2004MapTweaks.IMapTweak() {
-                    @Override
-                    public void tweak(NavigationGraphBuilder navigationGraphBuilder) {
-                            MapTweaks.tweakCTFMaul(navBuilder);
-                    }
-                }
-
-        );*/
-
         MapTweaks.tweak(navBuilder);
         navMeshModule.setReloadNavMesh(UPDATE_NAVMESH);
     }
@@ -239,7 +233,33 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         weaponPrefs.addGeneralPref(UT2004ItemType.FLAK_CANNON, true);
         weaponPrefs.addGeneralPref(UT2004ItemType.BIO_RIFLE, true);
 
-       // weaponPrefs.newPrefsRange()
+        weaponPrefs.newPrefsRange(300)
+                .add(UT2004ItemType.FLAK_CANNON, true)
+                .add(UT2004ItemType.LINK_GUN, false)
+                .add(UT2004ItemType.MINIGUN, true)
+                .add(UT2004ItemType.LIGHTNING_GUN, true)
+                .add(UT2004ItemType.ASSAULT_RIFLE, true);
+
+        weaponPrefs.newPrefsRange(600)
+                .add(UT2004ItemType.MINIGUN, true)
+                .add(UT2004ItemType.LINK_GUN, false)
+                .add(UT2004ItemType.LIGHTNING_GUN, true)
+                .add(UT2004ItemType.FLAK_CANNON, true)
+                .add(UT2004ItemType.ASSAULT_RIFLE, true);
+
+        weaponPrefs.newPrefsRange(1200)
+                .add(UT2004ItemType.MINIGUN, false)
+                .add(UT2004ItemType.LIGHTNING_GUN, true)
+                .add(UT2004ItemType.LINK_GUN, true)
+                .add(UT2004ItemType.ASSAULT_RIFLE, true)
+                .add(UT2004ItemType.FLAK_CANNON, true);
+
+        weaponPrefs.newPrefsRange(2400)
+                .add(UT2004ItemType.LIGHTNING_GUN, true)
+                .add(UT2004ItemType.MINIGUN, false)
+                .add(UT2004ItemType.LINK_GUN, true)
+                .add(UT2004ItemType.ASSAULT_RIFLE, true)
+                .add(UT2004ItemType.FLAK_CANNON, true);
     }
 
     @Override
@@ -247,7 +267,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         // IT IS FORBIDDEN BY COMPETITION RULES TO CHANGE DESIRED SKILL TO DIFFERENT NUMBER THAN 6
         // IT IS FORBIDDEN BY COMPETITION RULES TO ALTER ANYTHING EXCEPT NAME & SKIN VIA INITIALIZE COMMAND
         // Jakub Gemrot -> targetName = "JakubGemrot"
-        String targetName = "MyName";
+        String targetName = "PATERA";
         botInstance = BOT_COUNT.getAndIncrement();
 
         int targetTeam = AgentInfo.TEAM_RED;
@@ -504,9 +524,26 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     @ObjectClassEventListener(objectClass = FlagInfo.class, eventClass = WorldObjectUpdatedEvent.class)
     public void flagInfoUpdated(WorldObjectUpdatedEvent<FlagInfo> event) {
         //   log.info("FLAG INFO UPDATED: " + event.getObject());
+        if (event.getObject() == null) return;
+
+        FlagInfo flag = event.getObject();
+        if (ctf.getOurFlag() != null && flag.getId().equals(ctf.getOurFlag().getId())) {
+            ourFlagLoc = flag.getLocation();
+        } else if (ctf.getEnemyFlag() != null && flag.getId().equals(ctf.getEnemyFlag().getId())) {
+            enemyFlagLoc = flag.getLocation();
+        }
+
 
        /* if (ctf.isBotCarryingEnemyFlag())
-            flagHolder = event.getObject().getHolder();*/
+            flagHolder = event.getObjectwd().getHolder();*/
+    }
+
+    public Location getEnemyFlagLoc() {
+        return enemyFlagLoc;
+    }
+
+    public Location getOurFlagLoc() {
+        return ourFlagLoc;
     }
 
     /**
@@ -580,40 +617,35 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
      */
     @Override
     public void beforeFirstLogic() {
+        this.navigation.addStrongNavigationListener(
+                changedValue -> {
+                    final NavPoint loc = navigation.getCurrentTargetNavPoint();
+                    switch (changedValue) {
+                        case STUCK:
+                            log.info("STUCK!");
+                            ++targetItemStuck;
 
-
-       /* this.navigation.addStrongNavigationListener(
-                new FlagListener<NavigationState>() {
-                    @Override
-                    public void flagChanged(NavigationState changedValue) {
-                        final NavPoint loc = navigation.getCurrentTargetNavPoint();
-                        switch (changedValue) {
-                            case STUCK:
-                                log.info("STUCK!");
-                                ++targetItemStuck;
-
-                                if (targetItemStuck >= 3) {
-
-                                    // log.info("TABOO [stuck]: " + targetItem.getId() + " / " + targetItem.getType());
-                                    // forbiddenItems.add(targetItem, 10);
-                                }
-                                break;
-                            case STOPPED:
-                                log.info("STOPPED!");
-                                break;
-                            case TARGET_REACHED:
-                                log.info("TARGET REACHED!");
+                            if (targetItemStuck >= 3) {
+                                behaviorManager.resetMoveAction();
                                 targetItemStuck = 0;
-                                break;
-                            case PATH_COMPUTATION_FAILED:
-                                log.info("FAILED TO COMPUTE PATH!");
-                                break;
-                            case NAVIGATING:
-                                log.info("Navigation continues...");
-                                break;
-                        }
+                            }
+
+                            break;
+                        case STOPPED:
+                            log.info("STOPPED!");
+                            break;
+                        case TARGET_REACHED:
+                            log.info("TARGET REACHED!");
+                            targetItemStuck = 0;
+                            break;
+                        case PATH_COMPUTATION_FAILED:
+                            log.info("FAILED TO COMPUTE PATH!");
+                            break;
+                        case NAVIGATING:
+                            log.info("Navigation continues...");
+                            break;
                     }
-                });*/
+                });
     }
 
     private long lastLogicStartMillis = 0;
@@ -638,7 +670,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         }
 
 
-      //  log.log(Level.INFO, "_________________________" + info.getName() + "---->" + this.amIFlager());
+        //  log.log(Level.INFO, "_________________________" + info.getName() + "---->" + this.amIFlager());
 
         if (players.canSeeEnemies()) {
             for (Map.Entry<UnrealId, Player> p : players.getVisibleEnemies().entrySet()) {
@@ -953,7 +985,11 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     private void askForCaptain(double distance) {
         //if (sendingLocationCD.isHot()) return;
         tcClient.sendToTeam(new TCRoleUpdate(info.getId(), distance));
-       // sendingLocationCD.use();
+        // sendingLocationCD.use();
+    }
+
+    public boolean amIAttacker() {
+        return (!amIDefender() && !amIFlagHolder());
     }
 
     public boolean amIFlager() {
