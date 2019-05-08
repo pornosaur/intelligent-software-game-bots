@@ -214,6 +214,7 @@ public class CTFCommObjectUpdates<BOTCTRL extends CTFBot> {
         }
     }
 
+
     @EventListener(eventClass = EndMessage.class)
     public void endMessage(EndMessage evet) {
         sendMe();

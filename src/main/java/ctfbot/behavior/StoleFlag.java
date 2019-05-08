@@ -7,6 +7,8 @@ import java.util.logging.Level;
 
 public class StoleFlag extends Behavior {
 
+    private boolean stealing = false;
+
     public StoleFlag(CTFBot bot) {
         super(bot, 0, Action.MOVE);
     }
@@ -14,14 +16,16 @@ public class StoleFlag extends Behavior {
     @Override
     public boolean isFiring() {
         if (!ctx.amIFlager() || ctx.amIFlagHolder()) return false;
+        if (stealing) return false;
 //        if (!ctx.getCTF().isEnemyFlagHome()) return false;        //TODO: Think about this behavior!
-        //TODO: If score is good, will make better freedom
+
         priority = 100;
         return true;
     }
 
     @Override
     public Behavior run() {
+        stealing = true;
         ctx.getLog().log(Level.INFO, "_____NAVIGATION STOLE FLAG STARTED______");
         ctx.navigateAStarPath(ctx.getCTF().getEnemyBase());
 
@@ -34,6 +38,7 @@ public class StoleFlag extends Behavior {
         //TODO check some other conditionals -> maybe smth more important!!!
         if (ctx.amIFlager() && !ctx.amIFlagHolder()) return this;
 
+        stealing = false;
         ctx.getNavigation().stopNavigation();
         ctx.getLog().log(Level.INFO, "_____NAVIGATION STOLE FLAG STOPPED_____");
         return null;
@@ -43,29 +48,33 @@ public class StoleFlag extends Behavior {
     public boolean mayTransition(Behavior toThiBehavior) {
         if (toThiBehavior == null) return false;
 
-        boolean returnBeh = false;
+        if ((toThiBehavior instanceof CollectItem) && ctx.getCTF().isOurFlagHome()) {
+            return  true;
+        }
         if ((toThiBehavior instanceof BackFlag) && ctx.amIFlagHolder()) {
-            returnBeh = true;
+            return true;
         }
-
-        if ((toThiBehavior instanceof CollectItem) && !ctx.getCTF().isOurFlagDropped()) {
-            returnBeh = true;
-        }
-
         if ((toThiBehavior instanceof GetFlag)) {
             return true;
         }
+        if ((toThiBehavior instanceof HuntEnemy) && ctx.amIAttacker()) return true;
 
-        return returnBeh;
+        return false;
     }
 
     @Override
     public Behavior transition(Behavior transitionTo) {
+        stealing = false;
         return transitionTo.run();
     }
 
     @Override
     public Action[] getRequiredAction() {
         return new Action[0];
+    }
+
+    @Override
+    public void reset() {
+        stealing = false;
     }
 }

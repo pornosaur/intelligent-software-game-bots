@@ -1,9 +1,9 @@
 package ctfbot.behavior;
 
 import ctfbot.CTFBot;
+import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 public class BehaviorManager<BOTCTRL extends CTFBot> {
@@ -78,13 +78,23 @@ public class BehaviorManager<BOTCTRL extends CTFBot> {
     }
 
     public void cleanUp() {
-        //TODO FORCED TERMINATE!!
+        resetMoveAction();
         runningBehaviors = new Behavior[]{null, null, null};
         nextBehaviors.clear();
     }
 
+    public Player getPlayerTarget() {
+        if (runningBehaviors[Action.FOCUS.ordinal()] != null) {
+            FocusBehavior focus = (FocusBehavior) runningBehaviors[Action.FOCUS.ordinal()];
+            return focus.getTarget();
+        }
+
+        return null;
+    }
+
     public void resetMoveAction() {
         synchronized (MUTEX) {
+            if (runningBehaviors[Action.MOVE.ordinal()] != null) runningBehaviors[Action.MOVE.ordinal()].reset();
             runningBehaviors[Action.MOVE.ordinal()] = null;
             ctx.getNavigation().stopNavigation();
             ctx.getLog().log(Level.INFO, "----------------RESET MOVE ACTION-------------------");

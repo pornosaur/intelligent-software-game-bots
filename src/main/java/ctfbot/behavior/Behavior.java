@@ -46,4 +46,7 @@ public abstract class Behavior implements IBehavior, Comparable {
 
         return 0;
     }
+
+    public void reset() {
+    }
 }
