@@ -23,6 +23,7 @@ public class MapTweaks {
         if (navBuilder.isMapName("CTF-Lostfaith")) tweakCTFLostfaith(navBuilder);
         if (navBuilder.isMapName("CTF-Maul")) tweakCTFMaul(navBuilder);
         if (navBuilder.isMapName("CTF-BP2-Concentrate")) tweakBP(navBuilder);
+        if (navBuilder.isMapName("CTF-Citadel")) tweakCTFCitadel(navBuilder);
     }
 
     public static void tweakBP(NavigationGraphBuilder navBuilder) {
@@ -30,8 +31,6 @@ public class MapTweaks {
         navBuilder.removeEdgesTo("CTF-BP2-Concentrate.InventorySpot19");
 
         navBuilder.removeEdge("CTF-BP2-Concentrate.InventorySpot9", "CTF-BP2-Concentrate.PathNode43");
-
-
 
         navBuilder.removeEdge("CTF-BP2-Concentrate.InventorySpot1", "CTF-BP2-Concentrate.AIMarker6");
         navBuilder.removeEdge("CTF-BP2-Concentrate.InventorySpot2", "CTF-BP2-Concentrate.AIMarker6");
@@ -136,12 +135,16 @@ public class MapTweaks {
         navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode5", "CTF-BP2-Concentrate.AIMarker7");
 
         navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode39", "CTF-BP2-Concentrate.PathNode91");
+    }
 
-        navBuilder.modifyEdge("CTF-BP2-Concentrate.PathNode59", "CTF-BP2-Concentrate.JumpSpot1").clearFlags();
-        navBuilder.modifyEdge("CTF-BP2-Concentrate.JumpSpot2", "CTF-BP2-Concentrate.JumpSpot1").clearFlags();
-        navBuilder.modifyEdge("CTF-BP2-Concentrate.JumpSpot2", "CTF-BP2-Concentrate.xRedFlagBase1").clearFlags();
+    public static void tweakCTFCitadel(NavigationGraphBuilder navBuilder) {
+        navBuilder.removeEdge("PathNode75", "JumpSpot26");
+        navBuilder.removeEdge("PathNode14", "JumpSpot10");
+        navBuilder.removeEdge("JumpSpot18", "JumpSpot4");
+        navBuilder.removeEdge("PathNode36", "JumpSpot11");
+        navBuilder.removeEdge("PathNode23", "PathNode26");
 
-
+        navBuilder.removeEdge("PathNode47", "PathNode49");
     }
 
     public static void tweakCTFMaul(NavigationGraphBuilder navBuilder) {

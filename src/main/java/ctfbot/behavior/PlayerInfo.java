@@ -3,7 +3,9 @@ package ctfbot.behavior;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 
-public class PlayerInfo implements Comparable {
+import java.io.Serializable;
+
+public class PlayerInfo implements Comparable, Serializable{
 
     private UnrealId id;
     private Location location;

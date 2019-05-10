@@ -1,6 +1,7 @@
 package ctfbot.behavior;
 
 import ctfbot.CTFBot;
+import ctfbot.behavior.focus.FocusBehavior;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 
 import java.util.*;
@@ -72,6 +73,10 @@ public class BehaviorManager<BOTCTRL extends CTFBot> {
                     runningBehaviors[i] = nextB.run();
                 }
             }
+        }
+
+        if (runningBehaviors[Action.MOVE.ordinal()] != null) {
+            ctx.getInfo().getBotName().setInfo(runningBehaviors[Action.MOVE.ordinal()].toString());
         }
 
         nextBehaviors.clear();

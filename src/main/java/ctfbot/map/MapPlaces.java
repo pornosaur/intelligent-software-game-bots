@@ -8,7 +8,7 @@ public class MapPlaces {
 
     public Location defendingPlace, defendingPlace2;
     public Location hidingPlace;
-    public Location defendingFocus;
+    public Location defendingFocus, walkFocusEnemy;
 
     private NavPoints navPoints;
 
@@ -50,22 +50,28 @@ public class MapPlaces {
             if (team == AgentInfo.TEAM_BLUE) {
                 defendingFocus = navPoints.getNavPoint("CTF-Citadel.xBlueFlagBase0").getLocation();
                 defendingPlace = new Location(-39, -3512, -1822);
-                hidingPlace = new Location(-316, -4342, -955);
+                defendingPlace2 = new Location(-626, -3502, -1822);
+                hidingPlace = navPoints.getNavPoint("CTF-Citadel.InventorySpot160").getLocation();
+                walkFocusEnemy = navPoints.getNavPoint("CTF-Citadel.xRedFlagBase0").getLocation();
             } else if (team == AgentInfo.TEAM_RED) {
                 defendingFocus = navPoints.getNavPoint("CTF-Citadel.xRedFlagBase0").getLocation();
                 defendingPlace = new Location(-565, 2198, -1822);
-                hidingPlace = new Location(62, 3017, -951);
+                defendingPlace2 = new Location(66, 221, -1822);
+                hidingPlace = navPoints.getNavPoint("CTF-Citadel.InventorySpot156").getLocation();
+                walkFocusEnemy = navPoints.getNavPoint("CTF-Citadel.xBlueFlagBase0").getLocation();
             }
         } else if (mapTmp.compareTo("ctf-bp2-concentrate") == 0) {
             if (team == AgentInfo.TEAM_BLUE) {
                 defendingFocus = navPoints.getNavPoint("CTF-BP2-Concentrate.xBlueFlagBase0").getLocation();
-                defendingPlace = new Location(-1724, -3444, 369);
-                defendingPlace2 = new Location(-2400, -3481, 369);
+                defendingPlace = new Location(-2055, -2991, -202);
+                defendingPlace2 = new Location(-1486, -3019, -74);
                 hidingPlace = new Location(-1834, -4253, 369);
+                walkFocusEnemy = new Location(2195, -222, 369);
             } else if (team == AgentInfo.TEAM_RED) {
-                defendingPlace = new Location(1405, 293, 369);
-                defendingPlace2 = new Location(1444, -353, 369);
+                defendingPlace = new Location(944, 4, -202);
+                defendingPlace2 = new Location(947, 531, -75);
                 hidingPlace = new Location(2195, -222, 369);
+                walkFocusEnemy = new Location(-1834, -4253, 369);
             }
         }
     }
