@@ -15,10 +15,10 @@ public class StealFlag extends Behavior {
     @Override
     public boolean isFiring() {
         if (ctx.amIDefender() || ctx.amIFlagHolder()) return false;
+        if (!ctx.getCTF().isEnemyFlagHome() && ctx.amINearest()) return true;
         if (!ctx.getCTF().isOurFlagHome() && ctx.getSeenEnemyWithOurFlag() != null) return false;
         if (stealing) return false;
 
-        priority = 100;
         return true;
     }
 
@@ -34,6 +34,7 @@ public class StealFlag extends Behavior {
 
     @Override
     public Behavior terminate() {
+        if (!ctx.getCTF().isEnemyFlagHome() && ctx.amINearest()) return this;
         if (ctx.getWhoIsFlagHolder() == null && ctx.amIFlager()) return this;
 
         stealing = false;

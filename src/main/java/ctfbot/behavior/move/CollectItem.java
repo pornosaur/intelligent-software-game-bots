@@ -34,7 +34,7 @@ public class CollectItem extends Behavior {
     @Override
     public boolean isFiring() {
         nextItem = null;
-        itemDistance = Double.MAX_VALUE;
+        itemDistance = Double.MAX_VALUE - 10;
 
         if (ctx.getInfo().getLocation().getDistance(ctx.getCTF().getEnemyBase().getLocation()) <= 800) return false;
 
@@ -53,6 +53,9 @@ public class CollectItem extends Behavior {
                 ctx.getInfo().getLocation(), (DistanceUtils.IGetDistance<Item>) (object, target) -> {
                     double m = 1;
 
+                    if (!ctx.getFwMap().reachable(ctx.getInfo().getNearestNavPoint(), object.getNavPoint())) {
+                        return Double.MAX_VALUE;
+                    }
                     if (object.getType().getCategory() == ItemType.Category.WEAPON && !onlyAmmo) {
                         if (!isPreferedWeapon(object)) return Double.MAX_VALUE;
                         if (ctx.getInfo().getLocation().getDistance(object.getLocation()) > maxDistanceWeapon)
@@ -162,6 +165,7 @@ public class CollectItem extends Behavior {
 
                         return m * aStarDistance;
                     } else if (object.getType() == UT2004ItemType.U_DAMAGE_PACK && !onlyAmmo) {
+
                         double aStarDistance = ctx.getDistanceAStar(object.getNavPoint(),
                                 ctx.getInfo().getNearestNavPoint());
 
@@ -182,8 +186,8 @@ public class CollectItem extends Behavior {
         if (tmpItem == null) return false;
 
         //TODO TEST REACHABLE FOR PORTAL IN CITADEL MAP
-        boolean reachable = ctx.getFwMap().reachable(ctx.getInfo().getNearestNavPoint(), tmpItem.getNavPoint());
-        if (!reachable) return false;
+       /* boolean reachable = ctx.getFwMap().reachable(ctx.getInfo().getNearestNavPoint(), tmpItem.getNavPoint());
+        if (!reachable) return false;*/
 
         if (itemDistance > getMaxDistance(tmpItem)) return false;
 

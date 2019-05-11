@@ -712,6 +712,10 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
 
         behaviorManager.execute();
 
+        if (info.getLocation().getDistance(ctf.getEnemyBase().getLocation()) <= 200) {
+            move.turnHorizontal(90);
+        }
+
         if (lastLogicStartMillis == 0) {
             lastLogicStartMillis = logicStartTime;
             timeDelta = 1;
@@ -1013,11 +1017,15 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         return behaviorManager.getPlayerTarget();
     }
 
-    public boolean amIAttacker() {
-        if (myPlayers == null) return false;
-        if (myPlayers.size() <= 2) return false;
+    public boolean amINearest() {
+        if (myPlayers.size() < 3) return false;
+        if (amIFlagHolder()) return false;
 
-        return (!amIDefender() && !amIFlagHolder() && !myPlayers.get(0).getId().equals(info.getId()));
+        if (whoIsFlagHolder != null && myPlayers.get(0).getId().equals(whoIsFlagHolder.getId())) {
+            return myPlayers.get(1).getId().equals(info.getId());
+        }
+
+        return myPlayers.get(0).getId().equals(info.getId());
     }
 
     public double getHealthRatio() {
