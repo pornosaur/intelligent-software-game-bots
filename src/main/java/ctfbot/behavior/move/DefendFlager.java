@@ -31,8 +31,7 @@ public class DefendFlager extends Behavior {
         if (p == null) return null;
 
         if (checkLoc.tryUse()) {
-            if (CTFBot.CAN_USE_NAVIGATE) ctx.getNavigation().navigate(p.getLocation());
-            else ctx.navigateAStarPath(ctx.getNavPoints().getNearestNavPoint(p.getLocation()));
+            ctx.smartNavigate(p.getLocation());
         }
 
         return this;

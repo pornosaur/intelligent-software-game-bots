@@ -20,8 +20,7 @@ public class DefendBase extends Behavior {
 
     @Override
     public Behavior run() {
-        if (CTFBot.CAN_USE_NAVIGATE) ctx.getNavigation().navigate(ctx.getDefendingPlace());
-        else ctx.navigateAStarPath(ctx.getNavPoints().getNearestNavPoint(ctx.getDefendingPlace()));
+        ctx.smartNavigate(ctx.getDefendingPlace());
 
         defending = true;
         return this;

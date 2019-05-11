@@ -22,10 +22,10 @@ public class BackFlag extends Behavior {
     @Override
     public Behavior run() {
         if (!ctx.getCTF().isOurFlagHome()) {
-            ctx.navigateAStarPath(ctx.getNavPoints().getNearestNavPoint(ctx.getHidingPlace()));
+            ctx.smartNavigate(ctx.getHidingPlace());
             hiding = true;
         } else {
-            ctx.navigateAStarPath(ctx.getCTF().getOurBase());
+            ctx.smartNavigate(ctx.getCTF().getOurBase());
             hiding = false;
         }
 
@@ -35,7 +35,7 @@ public class BackFlag extends Behavior {
     @Override
     public Behavior terminate() {
         if (ctx.amIFlagHolder() && !ctx.getCTF().isOurFlagHome()) {
-            if (!hiding){
+            if (!hiding) {
                 ctx.getNavigation().stopNavigation();
                 run();
             }
@@ -56,21 +56,17 @@ public class BackFlag extends Behavior {
 
     @Override
     public boolean mayTransition(Behavior toThiBehavior) {
-        boolean returnBeh = false;
         if ((toThiBehavior instanceof StealFlag) && !ctx.getCTF().isOurTeamCarryingEnemyFlag()) {
-            returnBeh = true;
+            return true;
         }
 
+        if ((toThiBehavior instanceof CollectItem)) return true;
 
-        //TODO make getBehaviorType!!!
-        if ((toThiBehavior instanceof CollectItem)) returnBeh = true;
-
-        return returnBeh;
+        return false;
     }
 
     @Override
-    public Behavior transition(Behavior transitionTo)
-    {
+    public Behavior transition(Behavior transitionTo) {
         hiding = false;
         return transitionTo.run();
     }
@@ -87,6 +83,6 @@ public class BackFlag extends Behavior {
 
     @Override
     public String toString() {
-        return "BACK WITH FLAG";
+        return "CAPTURE FLAG";
     }
 }

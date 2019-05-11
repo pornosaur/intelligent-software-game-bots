@@ -51,7 +51,7 @@ public class BehaviorManager<BOTCTRL extends CTFBot> {
             for (Behavior b : nextBehaviors) {
                 if (b.getAction() == Action.values()[i]) {
                     preparedByAction[i] = b;
-                    break; //TODO: think about this
+                    break;
                 }
             }
         }

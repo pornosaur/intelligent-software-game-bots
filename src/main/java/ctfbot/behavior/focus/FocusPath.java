@@ -10,7 +10,6 @@ public class FocusPath extends FocusBehavior {
 
     private final double DISTANCE_DEFENDING = 100.0;
     private final double DISTANCE_STEALING_FLAG = 300.0;
-    static private final double HEALTH_RATIO = 0.35;
 
     private Location forcedFocus;
 
@@ -30,7 +29,6 @@ public class FocusPath extends FocusBehavior {
 
     @Override
     public boolean isFiring() {
-        double healthRatio = ctx.getInfo().getHealth() / ctx.getInfo().game.getFullHealth();
         if (forcedFocus != null) return true;
         double disEnemyBase = ctx.getCTF().getEnemyBase().getLocation().getDistance(ctx.getInfo().getLocation());
         if (disEnemyBase <= 800) return true;

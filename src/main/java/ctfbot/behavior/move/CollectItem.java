@@ -10,24 +10,25 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.UT2004ItemType;
 import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Item;
 import cz.cuni.amis.utils.Cooldown;
 
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class CollectItem extends Behavior {
 
     private final static double MAX_Z_AXIS_VARIANCE = 50;
-    private final static double MAX_ADRENALINE = 15;
-
-    private Cooldown checkLoc = new Cooldown(5000);
+    private final double UDAMAGE_DISTANCE;
+    private final double BOOST;
+    private Cooldown stuck = new Cooldown(2500);
 
     private static UT2004ItemType defenderWeapons[] = {UT2004ItemType.MINIGUN, UT2004ItemType.LINK_GUN,
             UT2004ItemType.LIGHTNING_GUN, UT2004ItemType.FLAK_CANNON};
 
-    private Item nextItem, lastItem;
+    private Item nextItem;
     private double itemDistance;
 
     public CollectItem(CTFBot bot) {
         super(bot, 0, Action.MOVE);
+        BOOST = MapPlaces.isCit() ? 1.5 : 1;
+        UDAMAGE_DISTANCE = 500;
     }
 
     @Override
@@ -45,7 +46,7 @@ public class CollectItem extends Behavior {
 
         boolean onlyAmmo = !ctx.hasReadyAnyWeapon();
 
-        // ctx.getItems().getSpawnedTaboos().
+
         Item tmpItem = DistanceUtils.getNearest(ctx.getItems().getSpawnedItems().values().stream()
                         .filter((item) -> ctx.isCurrentlyPickable(item))
                         .collect(Collectors.toList()),
@@ -145,7 +146,6 @@ public class CollectItem extends Behavior {
 
                         return m * aStarDistance;
                     } else if (object.getType().getCategory() == ItemType.Category.ADRENALINE && !onlyAmmo) {
-                        if (ctx.getInfo().getAdrenaline() > MAX_ADRENALINE) return Double.MAX_VALUE;
                         if (maxDistanceAdrenaline < 0) return Double.MAX_VALUE;
 
                         double aStarDistance = ctx.getDistanceAStar(object.getNavPoint(),
@@ -165,7 +165,7 @@ public class CollectItem extends Behavior {
                         double aStarDistance = ctx.getDistanceAStar(object.getNavPoint(),
                                 ctx.getInfo().getNearestNavPoint());
 
-                        //TODO try if Damage is important!!
+                        if (aStarDistance > UDAMAGE_DISTANCE) return Double.MAX_VALUE;
                         if (m * aStarDistance < itemDistance) {
                             itemDistance = m * aStarDistance;
                         } else {
@@ -181,33 +181,35 @@ public class CollectItem extends Behavior {
 
         if (tmpItem == null) return false;
 
-        double d = ctx.getDistanceAStar(ctx.getInfo().getNearestNavPoint(), tmpItem.getNavPoint());
-        if (d == -1) return false;
+        //TODO TEST REACHABLE FOR PORTAL IN CITADEL MAP
+        boolean reachable = ctx.getFwMap().reachable(ctx.getInfo().getNearestNavPoint(), tmpItem.getNavPoint());
+        if (!reachable) return false;
 
         if (itemDistance > getMaxDistance(tmpItem)) return false;
 
         this.nextItem = tmpItem;
+
         return true;
     }
 
 
     @Override
     public Behavior run() {
-        ctx.getLog().log(Level.INFO, "__________COLLECT: " + nextItem);
         if (nextItem == null) return null;
-        if (nextItem.getNavPoint() == null) return null;
 
-        lastItem = nextItem;
-        ctx.navigateAStarPath(nextItem.getNavPoint());
+        ctx.smartNavigate(nextItem);
+        stuck.use();
 
         return this;
     }
 
     @Override
     public Behavior terminate() {
-        if (ctx.getNavigation().isNavigating()) return this;
+        if (stuck.isHot() && ctx.getNavigation().isNavigating()) return this;
 
         ctx.getNavigation().stopNavigation();
+
+
         return null;
     }
 
@@ -220,7 +222,13 @@ public class CollectItem extends Behavior {
 
     @Override
     public Behavior transition(Behavior transitionTo) {
+
         return transitionTo.run();
+    }
+
+    @Override
+    public void reset() {
+
     }
 
     @Override
@@ -249,7 +257,7 @@ public class CollectItem extends Behavior {
                 distance = getMaxDistanceAdrenaline();
                 break;
             case OTHER:
-                distance = 500;
+                distance = UDAMAGE_DISTANCE;
                 break;
             default:
                 distance = -1;
@@ -264,21 +272,21 @@ public class CollectItem extends Behavior {
 
     private double getMaxDistanceArmor() {
         if (ctx.amIFlager()) {
-            return 300;
+            return 350;
         }
-        return 5000;
+        return 5000 * BOOST;
     }
 
     private double getMaxDistanceHealth() {
         if (ctx.amIFlager()) {
             if (!ctx.getInfo().isHealthy()) {
-                return 300;
+                return 350;
             }
 
             return -1;
         }
 
-        return (ctx.getInfo().isHealthy() ? -1 : 5000);
+        return (ctx.getInfo().isHealthy() ? -1 : 5000 * BOOST);
     }
 
     private double getMaxDistanceAmmo() {
@@ -287,10 +295,10 @@ public class CollectItem extends Behavior {
             if (flagHolder) {
                 return 200;
             }
-            return 500;
+            return 500 * BOOST;
         }
 
-        return 1500;
+        return 2000 * BOOST;
     }
 
     private double getMaxDistanceWeapon() {
@@ -298,10 +306,10 @@ public class CollectItem extends Behavior {
             if (ctx.amIFlagHolder()) {
                 return 200;
             }
-            return 500;
+            return 500 * BOOST;
         }
 
-        return 6500;
+        return 5500 * BOOST;
     }
 
     private boolean isPreferedWeapon(ItemType item) {
@@ -314,9 +322,14 @@ public class CollectItem extends Behavior {
         return false;
     }
 
-
     private boolean isPreferedWeapon(Item item) {
+
         return isPreferedWeapon(item.getType());
+    }
+
+    @Override
+    public String toString() {
+        return "COLLECTING ITEMS";
     }
 
 }

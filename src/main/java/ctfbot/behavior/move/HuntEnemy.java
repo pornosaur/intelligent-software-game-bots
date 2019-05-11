@@ -9,17 +9,12 @@ import cz.cuni.amis.pogamut.ut2004.communication.messages.gbinfomessages.Player;
 public class HuntEnemy extends Behavior {
 
     public HuntEnemy(CTFBot bot) {
-        super(bot, 120, Action.MOVE);
+        super(bot, 0, Action.MOVE);
     }
 
     @Override
     public boolean isFiring() {
-        //TODO maybe defenders also hunt enemy!!! But in different way!!!
-        if (ctx.amIFlagHolder()) return false;
-        if (ctx.getEnemyTarget() == null) return false;
-        if (ctx.amIAttacker()) return true;
-        if (ctx.amIDefender() && ctx.getEnemyTarget().getLocation().getDistance(ctx.getInfo().getLocation()) <= 1500)
-            return true;
+       if (ctx.amIDefender() && ctx.getPlayers().canSeeEnemies()) return true;
 
         return false;
     }
@@ -30,31 +25,20 @@ public class HuntEnemy extends Behavior {
         if (enemy == null) enemy = ctx.getPlayers().getNearestVisibleEnemy();
         if (enemy == null) return null;
 
-        if (CTFBot.CAN_USE_NAVIGATE) ctx.getNavigation().navigate(enemy);
-        else ctx.navigateAStarPath(ctx.getNavPoints().getNearestNavPoint(enemy.getLocation()));
+        ctx.smartNavigate(enemy);
 
         return this;
     }
 
     @Override
     public Behavior terminate() {
-        if (ctx.getEnemyTarget() != null && ctx.getEnemyTarget().isVisible()) return this;
         if (ctx.getNavigation().isNavigating()) return this;
 
-        ctx.getNavigation().stopNavigation();
         return null;
     }
 
     @Override
     public boolean mayTransition(Behavior toThiBehavior) {
-        if (toThiBehavior instanceof BackFlag) return true;
-        if (toThiBehavior instanceof GetFlag) return true;
-        if (toThiBehavior instanceof DefendBase) return true;
-        if (toThiBehavior instanceof CollectItem) return true;
-        if ((toThiBehavior instanceof StealFlag)) {
-            return true;
-        }
-
         return false;
     }
 

@@ -29,14 +29,12 @@ public class FocusDefend extends FocusBehavior {
 
     @Override
     public Behavior terminate() {
-        if (ctx.getDefendingPlace().getDistance(ctx.getInfo().getLocation()) <= DISTANCE_DEFENDING) return this;
         return null;
     }
 
     @Override
     public boolean mayTransition(Behavior toThiBehavior) {
         if (toThiBehavior instanceof FocusEnemy) return true;
-        if (toThiBehavior instanceof FocusPath) return true;
 
         return false;
     }

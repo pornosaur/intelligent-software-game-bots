@@ -9,6 +9,8 @@ import cz.cuni.amis.utils.Cooldown;
 
 public class FocusEnemy extends FocusBehavior {
 
+    private final double DISTANCE_DEFENDING = 100.0;
+
     private Cooldown cd = new Cooldown(600);
     private boolean backward;
 
@@ -19,7 +21,8 @@ public class FocusEnemy extends FocusBehavior {
 
     @Override
     public boolean isFiring() {
-        //if (ctx.getPlayers().canSeeEnemies()) return true;
+        if (ctx.getDefendingPlace().getDistance(ctx.getInfo().getLocation()) <= DISTANCE_DEFENDING
+                && !ctx.getPlayers().canSeeEnemies()) return false;
 
         return true;
     }

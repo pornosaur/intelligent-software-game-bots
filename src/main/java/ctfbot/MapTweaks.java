@@ -145,6 +145,8 @@ public class MapTweaks {
         navBuilder.removeEdge("PathNode23", "PathNode26");
 
         navBuilder.removeEdge("PathNode47", "PathNode49");
+        navBuilder.removeEdge("PathNode103", "JumpSpot28");
+        navBuilder.removeEdge("PathNode99", "JumpSpot27");
     }
 
     public static void tweakCTFMaul(NavigationGraphBuilder navBuilder) {
@@ -181,11 +183,6 @@ public class MapTweaks {
         navBuilder.removeEdge("InventorySpot801", "JumpSpot7");
         navBuilder.removeEdge("PathNode48", "JumpSpot7");
         navBuilder.removeEdge("PathNode64", "JumpSpot7");
-
-        /*navBuilder.removeEdge("PlayerStart20", "AIMarker151");
-        navBuilder.removeEdge("PathNode143", "AIMarker151");
-        navBuilder.removeEdge("PathNode12", "AIMarker151");
-        navBuilder.removeEdge("PathNode63", "AIMarker151");*/
     }
 
 

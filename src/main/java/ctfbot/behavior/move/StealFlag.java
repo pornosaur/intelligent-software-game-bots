@@ -4,9 +4,6 @@ import ctfbot.CTFBot;
 import ctfbot.behavior.Action;
 import ctfbot.behavior.Behavior;
 
-import java.util.logging.Level;
-
-
 public class StealFlag extends Behavior {
 
     private boolean stealing = false;
@@ -28,9 +25,8 @@ public class StealFlag extends Behavior {
     @Override
     public Behavior run() {
         stealing = true;
-        ctx.getLog().log(Level.INFO, "_____NAVIGATION STOLE FLAG STARTED______");
 
-        ctx.navigateAStarPath(ctx.getCTF().getEnemyBase());
+        ctx.smartNavigate(ctx.getCTF().getEnemyBase());
 
         return this;
     }
@@ -42,7 +38,6 @@ public class StealFlag extends Behavior {
 
         stealing = false;
         ctx.getNavigation().stopNavigation();
-        ctx.getLog().log(Level.INFO, "_____NAVIGATION STOLE FLAG STOPPED____ _");
 
         return null;
     }

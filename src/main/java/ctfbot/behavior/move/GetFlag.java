@@ -22,6 +22,7 @@ public class GetFlag extends Behavior {
 
         /* OUR FLAG IS DROPPED OR HELD AND WAS SEEN */
         /*if (ctx.getSeenEnemyWithOurFlag() != null && !ctx.getCTF().isOurFlagHome() && ctx.amINearestPlayer()) return true;*/
+
         if (ctx.getCTF().getOurFlag().isVisible() && ctx.getCTF().getOurFlag().getLocation().getDistance(ctx.getInfo().getLocation()) <= 800 && !ctx.getCTF().isOurFlagHome())
             return true;
 
@@ -39,21 +40,22 @@ public class GetFlag extends Behavior {
         if (ctx.getCTF().getOurFlag().isVisible() &&
                 ctx.getCTF().getOurFlag().getLocation().getDistance(ctx.getInfo().getLocation()) <= 800 && !ctx.getCTF().isOurFlagHome()) {
             target = ctx.getCTF().getOurFlag().getLocation();
-        } else if (ctx.getCTF().isEnemyTeamCarryingOurFlag()) {
-            target = ctx.getCTF().getEnemyBase().getLocation();
-        } /*else if (ctx.getSeenEnemyWithOurFlag() != null && !ctx.getCTF().isOurFlagHome()
+        }  /*else if (ctx.getSeenEnemyWithOurFlag() != null && !ctx.getCTF().isOurFlagHome()
                 && ctx.amINearestPlayer()) {
             PlayerInfo ourFlagInfo = ctx.getSeenEnemyWithOurFlag();
             if (ourFlagInfo.getLocation() != null) target = ourFlagInfo.getLocation();
         }*/ else if (ctx.getSeenEnemyFlag() != null && !ctx.getCTF().isEnemyFlagHome()
-                && !ctx.getCTF().isOurTeamCarryingEnemyFlag()) {
+                && !ctx.getCTF().isEnemyFlagDropped()) {
             PlayerInfo enemyFlagInfo = ctx.getSeenEnemyFlag();
-            if (enemyFlagInfo.getLocation() != null) target = enemyFlagInfo.getLocation();
+            if (enemyFlagInfo.getLocation() != null
+                    && enemyFlagInfo.getLocation().getDistance(ctx.getInfo().getLocation()) <= 800)
+                target = enemyFlagInfo.getLocation();
+        } else if (ctx.getCTF().isEnemyTeamCarryingOurFlag()) {
+            target = ctx.getCTF().getEnemyBase().getLocation();
         }
 
         if (target != null) {
-            if (CTFBot.CAN_USE_NAVIGATE) ctx.getNavigation().navigate(target);
-            else ctx.navigateAStarPath(ctx.getNavPoints().getNearestNavPoint(target));
+            ctx.smartNavigate(target);
             lastTarget = target;
         }
 
@@ -62,7 +64,7 @@ public class GetFlag extends Behavior {
 
     @Override
     public Behavior terminate() {
-        if (lastTarget != null && !ctx.cantSeeFlagButClose(lastTarget) && ctx.getNavigation().isNavigating() && (
+        if (lastTarget != null && ctx.getNavigation().isNavigating() && (
                 !ctx.getCTF().isOurFlagHome() || ctx.getCTF().isEnemyFlagDropped())) return this;
 
         ctx.getNavigation().stopNavigation();
@@ -78,7 +80,6 @@ public class GetFlag extends Behavior {
         if (toThiBehavior instanceof StealFlag) return true;
         if (toThiBehavior instanceof BackFlag) return true;
         if (toThiBehavior instanceof DefendBase) return true;
-
 
         return false;
     }
