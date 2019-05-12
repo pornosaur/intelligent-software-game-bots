@@ -1,6 +1,5 @@
 package ctfbot;
 
-import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.NavigationGraphBuilder;
 
 /**
@@ -26,165 +25,159 @@ public class MapTweaks {
         if (navBuilder.isMapName("CTF-Citadel")) tweakCTFCitadel(navBuilder);
     }
 
+    /**
+     * Updating navs for CTF-BP2-Concentrate
+     *
+     * @param navBuilder navigation builder.
+     */
     public static void tweakBP(NavigationGraphBuilder navBuilder) {
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode43", "CTF-BP2-Concentrate.JumpSpot4");
-        navBuilder.removeEdgesTo("CTF-BP2-Concentrate.InventorySpot19");
-
-        navBuilder.removeEdge("CTF-BP2-Concentrate.InventorySpot9", "CTF-BP2-Concentrate.PathNode43");
-
-        navBuilder.removeEdge("CTF-BP2-Concentrate.InventorySpot1", "CTF-BP2-Concentrate.AIMarker6");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.InventorySpot2", "CTF-BP2-Concentrate.AIMarker6");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.InventorySpot55", "CTF-BP2-Concentrate.PathNode44");
-
-        navBuilder.removeEdge("CTF-BP2-Concentrate.JumpSpot3", "CTF-BP2-Concentrate.xBlueFlagBase0");
-
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode0", "CTF-BP2-Concentrate.JumpSpot0");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode0", "CTF-BP2-Concentrate.JumpSpot3");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode0", "CTF-BP2-Concentrate.PathNode39");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode0", "CTF-BP2-Concentrate.xBlueFlagBase0");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode2", "CTF-BP2-Concentrate.PathNode76");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode39", "CTF-BP2-Concentrate.JumpSpot3");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode44", "CTF-BP2-Concentrate.JumpSpot0");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode44", "CTF-BP2-Concentrate.JumpSpot11");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode44", "CTF-BP2-Concentrate.PathNode39");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode44", "CTF-BP2-Concentrate.xBlueFlagBase0");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode68", "CTF-BP2-Concentrate.JumpSpot12");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode69", "CTF-BP2-Concentrate.JumpSpot10");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode74", "CTF-BP2-Concentrate.JumpSpot1");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode74", "CTF-BP2-Concentrate.JumpSpot2");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode74", "CTF-BP2-Concentrate.PathNode75");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode74", "CTF-BP2-Concentrate.xRedFlagBase1");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode75", "CTF-BP2-Concentrate.JumpSpot2");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode76", "CTF-BP2-Concentrate.JumpSpot11");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode81", "CTF-BP2-Concentrate.JumpSpot1");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode81", "CTF-BP2-Concentrate.JumpSpot2");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode81", "CTF-BP2-Concentrate.PathNode75");
-        navBuilder.removeEdge("CTF-BP2-Concentrate.PathNode81", "CTF-BP2-Concentrate.xRedFlagBase1");
-
-
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.AssaultPath12", "CTF-BP2-Concentrate.PathNode74");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.AssaultPath12", "CTF-BP2-Concentrate.PathNode81");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.AssaultPath5", "CTF-BP2-Concentrate.PathNode0");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.AssaultPath5", "CTF-BP2-Concentrate.PathNode44");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.InventorySpot55", "CTF-BP2-Concentrate.PathNode44");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.InventorySpot59", "CTF-BP2-Concentrate.PathNode81");
-
-        /* OKEY */
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot11", "CTF-BP2-Concentrate.PathNode75");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot11", "CTF-BP2-Concentrate.JumpSpot14");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot11", "CTF-BP2-Concentrate.PathNode31");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot11", "CTF-BP2-Concentrate.JumpSpot13");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot11", "CTF-BP2-Concentrate.PathNode44");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot11", "CTF-BP2-Concentrate.PathNode40");
-        /////////////
-
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot14", "CTF-BP2-Concentrate.PathNode75");
-
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot13", "CTF-BP2-Concentrate.PathNode75");
-
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot2", "CTF-BP2-Concentrate.PathNode74");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot2", "CTF-BP2-Concentrate.PathNode81");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot3", "CTF-BP2-Concentrate.PathNode0");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot3", "CTF-BP2-Concentrate.PathNode44");
-
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot4", "CTF-BP2-Concentrate.JumpSpot5");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot4", "CTF-BP2-Concentrate.JumpSpot6");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot4", "CTF-BP2-Concentrate.PathNode18");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot4", "CTF-BP2-Concentrate.PathNode30");
-
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode0", "CTF-BP2-Concentrate.JumpSpot0");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode0", "CTF-BP2-Concentrate.JumpSpot3");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode0", "CTF-BP2-Concentrate.PathNode39");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode23", "CTF-BP2-Concentrate.JumpSpot5");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode35", "CTF-BP2-Concentrate.JumpSpot6");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode39", "CTF-BP2-Concentrate.JumpSpot3");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode39", "CTF-BP2-Concentrate.JumpSpot5");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode39", "CTF-BP2-Concentrate.JumpSpot6");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode44", "CTF-BP2-Concentrate.JumpSpot0");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode44", "CTF-BP2-Concentrate.JumpSpot3");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode44", "CTF-BP2-Concentrate.PathNode39");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode44", "CTF-BP2-Concentrate.xBlueFlagBase0");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode67", "CTF-BP2-Concentrate.PathNode64");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode74", "CTF-BP2-Concentrate.JumpSpot1");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode74", "CTF-BP2-Concentrate.PathNode75");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode74", "CTF-BP2-Concentrate.xRedFlagBase1");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode81", "CTF-BP2-Concentrate.JumpSpot1");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode81", "CTF-BP2-Concentrate.PathNode75");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode81", "CTF-BP2-Concentrate.xRedFlagBase1");
-        // navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode9", "CTF-BP2-Concentrate.PathNode39");
-
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.xBlueFlagBase0", "CTF-BP2-Concentrate.PathNode0");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.xBlueFlagBase0", "CTF-BP2-Concentrate.PathNode44");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.xRedFlagBase1", "CTF-BP2-Concentrate.PathNode74");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.xRedFlagBase1", "CTF-BP2-Concentrate.PathNode81");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode44", "CTF-BP2-Concentrate.JumpSpot3");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode17", "CTF-BP2-Concentrate.InventorySpot16");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode23", "CTF-BP2-Concentrate.InventorySpot16");
-
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.InventorySpot52", "CTF-BP2-Concentrate.PathNode31");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.InventorySpot52", "CTF-BP2-Concentrate.PathNode40");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.InventorySpot53", "CTF-BP2-Concentrate.PathNode31");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.InventorySpot53", "CTF-BP2-Concentrate.PathNode40");
-
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.InventorySpot38", "CTF-BP2-Concentrate.PathNode30");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.InventorySpot38", "CTF-BP2-Concentrate.PathNode18");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.InventorySpot39", "CTF-BP2-Concentrate.PathNode30");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.InventorySpot39", "CTF-BP2-Concentrate.PathNode18");
-
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.JumpSpot14", "CTF-BP2-Concentrate.PathNode77");
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode5", "CTF-BP2-Concentrate.AIMarker7");
-
-        navBuilder.removeEdgesBetween("CTF-BP2-Concentrate.PathNode39", "CTF-BP2-Concentrate.PathNode91");
+        navBuilder.removeEdgesTo("InventorySpot19");
+        navBuilder.removeEdge("PathNode43", "JumpSpot4");
+        navBuilder.removeEdge("InventorySpot9", "PathNode43");
+        navBuilder.removeEdge("PathNode2", "PathNode76");
+        navBuilder.removeEdge("InventorySpot1", "AIMarker6");
+        navBuilder.removeEdge("InventorySpot2", "AIMarker6");
+        navBuilder.removeEdge("InventorySpot55", "PathNode44");
+        navBuilder.removeEdge("JumpSpot3", "xBlueFlagBase0");
+        navBuilder.removeEdge("PathNode39", "JumpSpot3");
+        navBuilder.removeEdge("PathNode75", "JumpSpot2");
+        navBuilder.removeEdge("PathNode68", "JumpSpot12");
+        navBuilder.removeEdge("PathNode69", "JumpSpot10");
+        navBuilder.removeEdge("PathNode74", "JumpSpot1");
+        navBuilder.removeEdge("PathNode74", "JumpSpot2");
+        navBuilder.removeEdge("PathNode74", "PathNode75");
+        navBuilder.removeEdge("PathNode74", "xRedFlagBase1");
+        navBuilder.removeEdge("PathNode81", "JumpSpot2");
+        navBuilder.removeEdge("PathNode81", "PathNode75");
+        navBuilder.removeEdge("PathNode81", "xRedFlagBase1");
+        navBuilder.removeEdge("PathNode81", "JumpSpot1");
+        navBuilder.removeEdge("PathNode76", "JumpSpot11");
+        navBuilder.removeEdge("PathNode44", "JumpSpot0");
+        navBuilder.removeEdge("PathNode44", "JumpSpot11");
+        navBuilder.removeEdge("PathNode44", "PathNode39");
+        navBuilder.removeEdge("PathNode44", "xBlueFlagBase0");
+        navBuilder.removeEdgesBetween("AssaultPath12", "PathNode74");
+        navBuilder.removeEdgesBetween("AssaultPath12", "PathNode81");
+        navBuilder.removeEdgesBetween("AssaultPath5", "PathNode0");
+        navBuilder.removeEdgesBetween("AssaultPath5", "PathNode44");
+        navBuilder.removeEdgesBetween("InventorySpot55", "PathNode44");
+        navBuilder.removeEdgesBetween("InventorySpot59", "PathNode81");
+        navBuilder.removeEdge("PathNode0", "xBlueFlagBase0");
+        navBuilder.removeEdge("PathNode0", "JumpSpot3");
+        navBuilder.removeEdge("PathNode0", "PathNode39");
+        navBuilder.removeEdge("PathNode0", "JumpSpot0");
+        navBuilder.removeEdgesBetween("PathNode74", "JumpSpot1");
+        navBuilder.removeEdgesBetween("PathNode74", "PathNode75");
+        navBuilder.removeEdgesBetween("PathNode74", "xRedFlagBase1");
+        navBuilder.removeEdgesBetween("JumpSpot4", "JumpSpot5");
+        navBuilder.removeEdgesBetween("JumpSpot4", "JumpSpot6");
+        navBuilder.removeEdgesBetween("JumpSpot4", "PathNode18");
+        navBuilder.removeEdgesBetween("JumpSpot4", "PathNode30");
+        navBuilder.removeEdge("PathNode0", "xBlueFlagBase0");
+        navBuilder.removeEdge("PathNode0", "JumpSpot3");
+        navBuilder.removeEdge("PathNode0", "PathNode39");
+        navBuilder.removeEdge("PathNode0", "JumpSpot0");
+        navBuilder.removeEdgesBetween("JumpSpot11", "PathNode75");
+        navBuilder.removeEdgesBetween("JumpSpot11", "JumpSpot14");
+        navBuilder.removeEdgesBetween("JumpSpot11", "PathNode31");
+        navBuilder.removeEdgesBetween("JumpSpot11", "JumpSpot13");
+        navBuilder.removeEdgesBetween("JumpSpot11", "PathNode44");
+        navBuilder.removeEdgesBetween("JumpSpot11", "PathNode40");
+        navBuilder.removeEdgesBetween("JumpSpot13", "PathNode75");
+        navBuilder.removeEdgesBetween("JumpSpot14", "PathNode75");
+        navBuilder.removeEdgesBetween("JumpSpot2", "PathNode74");
+        navBuilder.removeEdgesBetween("JumpSpot2", "PathNode81");
+        navBuilder.removeEdgesBetween("JumpSpot3", "PathNode0");
+        navBuilder.removeEdgesBetween("JumpSpot3", "PathNode44");
+        navBuilder.removeEdgesBetween("PathNode23", "JumpSpot5");
+        navBuilder.removeEdgesBetween("PathNode35", "JumpSpot6");
+        navBuilder.removeEdgesBetween("PathNode39", "JumpSpot3");
+        navBuilder.removeEdgesBetween("PathNode39", "JumpSpot5");
+        navBuilder.removeEdgesBetween("PathNode39", "JumpSpot6");
+        navBuilder.removeEdgesBetween("PathNode44", "JumpSpot0");
+        navBuilder.removeEdgesBetween("PathNode44", "JumpSpot3");
+        navBuilder.removeEdgesBetween("PathNode44", "PathNode39");
+        navBuilder.removeEdgesBetween("PathNode44", "xBlueFlagBase0");
+        navBuilder.removeEdgesBetween("PathNode67", "PathNode64");
+        navBuilder.removeEdgesBetween("PathNode81", "JumpSpot1");
+        navBuilder.removeEdgesBetween("PathNode81", "PathNode75");
+        navBuilder.removeEdgesBetween("PathNode81", "xRedFlagBase1");
+        navBuilder.removeEdgesBetween("xBlueFlagBase0", "PathNode0");
+        navBuilder.removeEdgesBetween("xBlueFlagBase0", "PathNode44");
+        navBuilder.removeEdgesBetween("xRedFlagBase1", "PathNode74");
+        navBuilder.removeEdgesBetween("xRedFlagBase1", "PathNode81");
+        navBuilder.removeEdgesBetween("PathNode44", "JumpSpot3");
+        navBuilder.removeEdgesBetween("PathNode17", "InventorySpot16");
+        navBuilder.removeEdgesBetween("PathNode23", "InventorySpot16");
+        navBuilder.removeEdgesBetween("InventorySpot53", "PathNode31");
+        navBuilder.removeEdgesBetween("InventorySpot52", "PathNode31");
+        navBuilder.removeEdgesBetween("InventorySpot52", "PathNode40");
+        navBuilder.removeEdgesBetween("InventorySpot53", "PathNode40");
+        navBuilder.removeEdgesBetween("InventorySpot38", "PathNode30");
+        navBuilder.removeEdgesBetween("InventorySpot39", "PathNode18");
+        navBuilder.removeEdgesBetween("InventorySpot38", "PathNode18");
+        navBuilder.removeEdgesBetween("InventorySpot39", "PathNode30");
+        navBuilder.removeEdgesBetween("JumpSpot14", "PathNode77");
+        navBuilder.removeEdgesBetween("PathNode5", "AIMarker7");
+        navBuilder.removeEdgesBetween("PathNode39", "PathNode91");
+        navBuilder.removeEdgesBetween("PathNode0", "JumpSpot0");
+        navBuilder.removeEdgesBetween("PathNode0", "JumpSpot3");
+        navBuilder.removeEdgesBetween("PathNode0", "PathNode39");
     }
 
+    /**
+     * Updating navs for CTF-Citadel
+     *
+     * @param navBuilder navigation builder.
+     */
     public static void tweakCTFCitadel(NavigationGraphBuilder navBuilder) {
         navBuilder.removeEdge("PathNode75", "JumpSpot26");
         navBuilder.removeEdge("PathNode14", "JumpSpot10");
         navBuilder.removeEdge("JumpSpot18", "JumpSpot4");
         navBuilder.removeEdge("PathNode36", "JumpSpot11");
         navBuilder.removeEdge("PathNode23", "PathNode26");
-
         navBuilder.removeEdge("PathNode47", "PathNode49");
         navBuilder.removeEdge("PathNode103", "JumpSpot28");
         navBuilder.removeEdge("PathNode99", "JumpSpot27");
     }
 
+    /**
+     * Updating navs for CTF-Maul
+     *
+     * @param navBuilder navigation builder.
+     */
     public static void tweakCTFMaul(NavigationGraphBuilder navBuilder) {
         navBuilder.removeEdge("PlayerStart8", "JumpSpot2");
         navBuilder.removeEdge("InventorySpot807", "JumpSpot2");
         navBuilder.removeEdge("PathNode92", "JumpSpot2");
-        navBuilder.removeEdge("PathNode66", "JumpSpot2");
-        navBuilder.removeEdge("PathNode67", "JumpSpot2");
         navBuilder.removeEdge("PathNode66", "JumpSpot18");
         navBuilder.removeEdge("PathNode93", "JumpSpot18");
+        navBuilder.removeEdge("PathNode78", "JumpSpot3");
+        navBuilder.removeEdge("PathNode96", "JumpSpot3");
+        navBuilder.removeEdge("PathNode10", "JumpSpot20");
+        navBuilder.removeEdge("PathNode63", "JumpSpot20");
+        navBuilder.removeEdge("PathNode6", "JumpSpot20");
         navBuilder.removeEdge("PathNode67", "JumpSpot18");
         navBuilder.removeEdge("PathNode76", "JumpSpot18");
         navBuilder.removeEdge("PathNode95", "JumpSpot18");
         navBuilder.removeEdge("PathNode67", "JumpSpot3");
         navBuilder.removeEdge("PathNode77", "JumpSpot3");
-        navBuilder.removeEdge("PathNode95", "JumpSpot3");
-        navBuilder.removeEdge("PathNode78", "JumpSpot3");
-        navBuilder.removeEdge("PathNode96", "JumpSpot3");
-
-        navBuilder.removeEdge("PathNode10", "JumpSpot6");
-        navBuilder.removeEdge("PathNode12", "JumpSpot6");
-        navBuilder.removeEdge("PlayerStart20", "JumpSpot6");
-        navBuilder.removeEdge("PathNode143", "JumpSpot6");
-        navBuilder.removeEdge("PathNode63", "JumpSpot6");
-        navBuilder.removeEdge("PathNode142", "JumpSpot6");
-
-        navBuilder.removeEdge("PathNode10", "JumpSpot20");
-        navBuilder.removeEdge("PathNode63", "JumpSpot20");
-        navBuilder.removeEdge("PathNode6", "JumpSpot20");
-        navBuilder.removeEdge("PathNode64", "JumpSpot20");
-        navBuilder.removeEdge("InventorySpot801", "JumpSpot20");
-
-        navBuilder.removeEdge("PlayerStart1", "JumpSpot7");
+        navBuilder.removeEdge("PathNode66", "JumpSpot2");
         navBuilder.removeEdge("InventorySpot801", "JumpSpot7");
         navBuilder.removeEdge("PathNode48", "JumpSpot7");
         navBuilder.removeEdge("PathNode64", "JumpSpot7");
+        navBuilder.removeEdge("PathNode95", "JumpSpot3");
+        navBuilder.removeEdge("PathNode67", "JumpSpot2");
+        navBuilder.removeEdge("PathNode10", "JumpSpot6");
+        navBuilder.removeEdge("PathNode12", "JumpSpot6");
+        navBuilder.removeEdge("PlayerStart20", "JumpSpot6");
+        navBuilder.removeEdge("PathNode64", "JumpSpot20");
+        navBuilder.removeEdge("PathNode143", "JumpSpot6");
+        navBuilder.removeEdge("PathNode63", "JumpSpot6");
+        navBuilder.removeEdge("PathNode142", "JumpSpot6");
+        navBuilder.removeEdge("InventorySpot801", "JumpSpot20");
+        navBuilder.removeEdge("PlayerStart1", "JumpSpot7");
     }
-
 
     // ======================
     // DM-1on1-Roughinery-FPS

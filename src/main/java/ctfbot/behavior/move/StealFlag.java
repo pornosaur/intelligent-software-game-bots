@@ -50,7 +50,7 @@ public class StealFlag extends Behavior {
         if (toThiBehavior instanceof GetFlag) return true;
         if (toThiBehavior instanceof DefendFlager) return true;
         if (toThiBehavior instanceof DefendBase) return true;
-        if (toThiBehavior instanceof BackFlag) return true;
+        if (toThiBehavior instanceof CaptureFlag) return true;
         if (toThiBehavior instanceof CollectItem) return true;
 
         return false;
@@ -60,11 +60,6 @@ public class StealFlag extends Behavior {
     public Behavior transition(Behavior transitionTo) {
         stealing = false;
         return transitionTo.run();
-    }
-
-    @Override
-    public Action[] getRequiredAction() {
-        return new Action[0];
     }
 
     @Override

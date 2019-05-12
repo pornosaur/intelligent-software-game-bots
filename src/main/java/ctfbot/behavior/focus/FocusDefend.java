@@ -9,7 +9,7 @@ public class FocusDefend extends FocusBehavior {
     private final double DISTANCE_DEFENDING = 100.0;
 
     public FocusDefend(CTFBot bot) {
-        super(bot, 0.0, Action.FOCUS);
+        super(bot, 0.0);
     }
 
     @Override
@@ -21,8 +21,8 @@ public class FocusDefend extends FocusBehavior {
 
     @Override
     public Behavior run() {
-        if (ctx.getNavigation().isNavigating()) ctx.getNavigation().setFocus(ctx.getFocucDefending());
-        else ctx.getMove().turnTo(ctx.getFocucDefending());
+        if (ctx.getNavigation().isNavigating()) ctx.getNavigation().setFocus(ctx.getFocusDefending());
+        else ctx.getMove().turnTo(ctx.getFocusDefending());
 
         return this;
     }
@@ -44,8 +44,4 @@ public class FocusDefend extends FocusBehavior {
         return transitionTo.run();
     }
 
-    @Override
-    public Action[] getRequiredAction() {
-        return new Action[0];
-    }
 }

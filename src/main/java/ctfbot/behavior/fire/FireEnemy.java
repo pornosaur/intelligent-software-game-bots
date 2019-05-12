@@ -22,7 +22,7 @@ public class FireEnemy extends Behavior {
 
     @Override
     public boolean isFiring() {
-      /*  if (ctx.getEnemyTarget() != null) return true;         //TODO Active this!!!
+      /*  if (ctx.getEnemyTarget() != null) return true;
         if (ctx.getPlayers().canSeeEnemies()) return true;*/
 
         return true;
@@ -68,8 +68,6 @@ public class FireEnemy extends Behavior {
             if (!ctx.getPlayers().canSeeEnemies()) ctx.getShoot().stopShooting();
         }
 
-        //TODO Intelligent fire at enemy!!
-
         return this;
     }
 
@@ -88,11 +86,6 @@ public class FireEnemy extends Behavior {
     @Override
     public Behavior transition(Behavior transitionTo) {
         return transitionTo.run();
-    }
-
-    @Override
-    public Action[] getRequiredAction() {
-        return new Action[0];
     }
 
     @Override

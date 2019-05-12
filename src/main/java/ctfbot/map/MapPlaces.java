@@ -9,7 +9,6 @@ public class MapPlaces {
     public Location defendingPlace;
     public Location hidingPlace;
     public Location defendingFocus, walkFocusEnemy;
-    public Location hauntingPlace;
 
     private NavPoints navPoints;
 

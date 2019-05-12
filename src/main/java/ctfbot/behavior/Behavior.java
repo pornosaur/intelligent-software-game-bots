@@ -5,12 +5,24 @@ import cz.cuni.amis.utils.Cooldown;
 
 public abstract class Behavior implements IBehavior, Comparable {
 
+    /**
+     * Instance of bot.
+     */
     protected CTFBot ctx;
 
+    /**
+     * Behavior priority.
+     */
     protected double priority;
 
+    /**
+     * Action.
+     */
     private Action action;
 
+    /**
+     * Expiration cooldown.
+     */
     protected Cooldown expiration;
 
     public Behavior(CTFBot bot, double priority, Action action) {
@@ -20,7 +32,7 @@ public abstract class Behavior implements IBehavior, Comparable {
         this.expiration = null;
     }
 
-    public boolean isExpirated() {
+    public boolean isExpired() {
         return expiration != null && expiration.isCool();
     }
 

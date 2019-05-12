@@ -15,7 +15,7 @@ public class FocusEnemy extends FocusBehavior {
     private boolean backward;
 
     public FocusEnemy(CTFBot bot) {
-        super(bot, 120, Action.FOCUS);
+        super(bot, 0.0);
         backward = false;
     }
 
@@ -84,11 +84,6 @@ public class FocusEnemy extends FocusBehavior {
     public Behavior transition(Behavior transitionTo) {
         target = null;
         return transitionTo.run();
-    }
-
-    @Override
-    public Action[] getRequiredAction() {
-        return new Action[0];
     }
 
 }

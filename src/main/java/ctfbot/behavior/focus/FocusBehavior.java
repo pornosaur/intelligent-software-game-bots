@@ -10,8 +10,8 @@ public abstract class FocusBehavior extends Behavior {
 
     protected Player target;
 
-    public FocusBehavior(CTFBot bot, double priority, Action action) {
-        super(bot, 0.0, Action.FOCUS);
+    public FocusBehavior(CTFBot bot, double priority) {
+        super(bot, priority, Action.FOCUS);
         target = null;
     }
 

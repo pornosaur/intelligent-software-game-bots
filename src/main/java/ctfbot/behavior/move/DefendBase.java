@@ -48,11 +48,6 @@ public class DefendBase extends Behavior {
     }
 
     @Override
-    public Action[] getRequiredAction() {
-        return new Action[0];
-    }
-
-    @Override
     public void reset() {
         defending = false;
     }

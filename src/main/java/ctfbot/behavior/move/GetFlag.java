@@ -78,7 +78,7 @@ public class GetFlag extends Behavior {
         //if (toThiBehavior instanceof GetFlag) return true;
         if (toThiBehavior instanceof DefendFlager) return true;
         if (toThiBehavior instanceof StealFlag) return true;
-        if (toThiBehavior instanceof BackFlag) return true;
+        if (toThiBehavior instanceof CaptureFlag) return true;
         if (toThiBehavior instanceof DefendBase) return true;
 
         return false;
@@ -94,12 +94,6 @@ public class GetFlag extends Behavior {
     public void reset() {
         lastTarget = null;
     }
-
-    @Override
-    public Action[] getRequiredAction() {
-        return new Action[0];
-    }
-
 
     @Override
     public String toString() {

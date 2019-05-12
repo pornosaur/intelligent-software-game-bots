@@ -185,12 +185,10 @@ public class CollectItem extends Behavior {
 
         if (tmpItem == null) return false;
 
-        //TODO TEST REACHABLE FOR PORTAL IN CITADEL MAP
        /* boolean reachable = ctx.getFwMap().reachable(ctx.getInfo().getNearestNavPoint(), tmpItem.getNavPoint());
         if (!reachable) return false;*/
 
         if (itemDistance > getMaxDistance(tmpItem)) return false;
-
         this.nextItem = tmpItem;
 
         return true;
@@ -233,11 +231,6 @@ public class CollectItem extends Behavior {
     @Override
     public void reset() {
 
-    }
-
-    @Override
-    public Action[] getRequiredAction() {
-        return new Action[0];
     }
 
     private double getMaxDistance(Item item) {

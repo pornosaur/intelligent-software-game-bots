@@ -7,8 +7,17 @@ import java.io.Serializable;
 
 public class PlayerInfo implements Comparable, Serializable{
 
+    /**
+     * Player ID.
+     */
     private UnrealId id;
+    /**
+     * Player location.
+     */
     private Location location;
+    /**
+     * Player distance.
+     */
     private double distance;
 
     public PlayerInfo(UnrealId id) {

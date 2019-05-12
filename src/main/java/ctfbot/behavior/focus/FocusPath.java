@@ -14,13 +14,13 @@ public class FocusPath extends FocusBehavior {
     private Location forcedFocus;
 
     public FocusPath(CTFBot bot) {
-        super(bot, 0, Action.FOCUS);
+        super(bot, 0);
         this.forcedFocus = null;
         this.expiration = null;
     }
 
     public FocusPath(CTFBot bot, double priority, Location location) {
-        super(bot, priority, Action.FOCUS);
+        super(bot, priority);
         this.forcedFocus = location;
 
         this.expiration = new Cooldown(500);
@@ -55,8 +55,8 @@ public class FocusPath extends FocusBehavior {
         } else if (ctx.getCTF().getEnemyBase().getLocation().getDistance(ctx.getInfo().getLocation()) <= DISTANCE_STEALING_FLAG) {
             ctx.getMove().turnHorizontal(90);
         } else if (ctx.getDefendingPlace().getDistance(ctx.getInfo().getLocation()) <= DISTANCE_DEFENDING) {
-            if (ctx.getNavigation().isNavigating()) ctx.getNavigation().setFocus(ctx.getFocucDefending());
-            else ctx.getMove().turnTo(ctx.getFocucDefending());
+            if (ctx.getNavigation().isNavigating()) ctx.getNavigation().setFocus(ctx.getFocusDefending());
+            else ctx.getMove().turnTo(ctx.getFocusDefending());
         } else {
             if (ctx.getNavigation().isNavigating()) ctx.getNavigation().setFocus(null);
             //else ctx.getMove().turnTo((Player) null);
@@ -79,8 +79,4 @@ public class FocusPath extends FocusBehavior {
         return null;
     }
 
-    @Override
-    public Action[] getRequiredAction() {
-        return new Action[0];
-    }
 }

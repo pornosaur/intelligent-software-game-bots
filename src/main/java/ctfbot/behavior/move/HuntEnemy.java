@@ -47,9 +47,4 @@ public class HuntEnemy extends Behavior {
         return transitionTo.run();
     }
 
-    @Override
-    public Action[] getRequiredAction() {
-        return new Action[0];
-    }
-
 }

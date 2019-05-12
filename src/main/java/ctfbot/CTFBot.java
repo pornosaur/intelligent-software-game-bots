@@ -1,6 +1,7 @@
 package ctfbot;
 
 import java.awt.*;
+import java.io.File;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,24 +21,17 @@ import cz.cuni.amis.pathfinding.alg.astar.AStarResult;
 import cz.cuni.amis.pathfinding.map.IPFMapView;
 import cz.cuni.amis.pogamut.base.agent.navigation.IPathFuture;
 import cz.cuni.amis.pogamut.base.agent.navigation.impl.PrecomputedPathFuture;
-import cz.cuni.amis.pogamut.base.communication.command.ICommandListener;
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.EventListener;
 import cz.cuni.amis.pogamut.base.communication.worldview.listener.annotation.ObjectClassEventListener;
-import cz.cuni.amis.pogamut.base.communication.worldview.object.IWorldObjectEvent;
-import cz.cuni.amis.pogamut.base.communication.worldview.object.WorldObjectId;
 import cz.cuni.amis.pogamut.base.communication.worldview.object.event.WorldObjectUpdatedEvent;
 import cz.cuni.amis.pogamut.base.utils.guice.AgentScoped;
 import cz.cuni.amis.pogamut.base.utils.math.DistanceUtils;
 import cz.cuni.amis.pogamut.base3d.worldview.object.ILocated;
 import cz.cuni.amis.pogamut.base3d.worldview.object.Location;
-import cz.cuni.amis.pogamut.base3d.worldview.object.Rotation;
 import cz.cuni.amis.pogamut.unreal.communication.messages.UnrealId;
 import cz.cuni.amis.pogamut.ut2004.agent.module.sensomotoric.Weapon;
-import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.AgentInfo;
-import cz.cuni.amis.pogamut.ut2004.agent.module.sensor.ManualControl;
 import cz.cuni.amis.pogamut.ut2004.agent.module.utils.TabooSet;
 import cz.cuni.amis.pogamut.ut2004.agent.module.utils.UT2004Skins;
-import cz.cuni.amis.pogamut.ut2004.agent.navigation.UT2004PathAutoFixer;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.levelGeometry.RayCastResult;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.navmesh.NavMeshClearanceComputer.ClearanceLimit;
 import cz.cuni.amis.pogamut.ut2004.agent.navigation.navmesh.pathfollowing.NavMeshNavigation;
@@ -68,6 +62,11 @@ import math.geom2d.Vector2D;
 @AgentScoped
 public class CTFBot extends UT2004BotTCController<UT2004Bot> {
 
+    /**
+     * Flag if is possible use navigation.navigate(...).
+     * There is bug for Citadel map in Pogamut!!!
+     * If navmesh is loaded, it will crash due to heuristic teleport distance.
+     */
     public static boolean CAN_USE_NAVIGATE;
 
     /**
@@ -78,32 +77,70 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     private CTFCommItems<CTFBot> commItems;
     private CTFCommObjectUpdates<CTFBot> commObjectUpdates;
 
+    /**
+     * Behavioral manager.
+     */
     private BehaviorManager<CTFBot> behaviorManager;
+
+    /**
+     * Special map places.
+     */
     private MapPlaces mapPlaces;
 
+    /**
+     * My team mates.
+     */
     private List<PlayerInfo> myPlayers;
+
+    /**
+     * Who is enemy flag holder.
+     */
     private PlayerInfo seenEnemyWithOurFlag = null;
+
+    /**
+     * Where is enemy flag (if dropped).
+     */
     private PlayerInfo seenEnemyFlag = null;
+
+    /**
+     * Who is flag holder.
+     */
     private PlayerInfo whoIsFlagHolder = null;
+
+    /**
+     * Taboo item set.
+     */
     private TabooSet<Item> tabooItems;
 
-    public final static double LOW_HEALTH_RATIO = 0.35;
-    public final static double LOW_AMMO_RATIO = 0.35;
+    /**
+     * Low health ratio value.
+     */
+    public final static double LOW_HEALTH_RATIO = 0.30;
 
+    /**
+     * Low ammo ratio value.
+     */
+    public final static double LOW_AMMO_RATIO = 0.30;
 
-    private long lastLogicTime = -1;
+    /**
+     * Maximal hear sense distance.
+     */
+    public final static double HEARING_DISTANCE = 2000;
 
-
-    //PARAMS
+    /**
+     * Input parameters.
+     */
     private static int team, desiredSkill, teamNum;
+
+    /**
+     * Flag for file with navmesh for citadel.
+     */
+    private static boolean existNavMeshCitadel = false;
 
     // =============
     // BOT LIFECYCLE
     // =============
 
-    public PlayerInfo getSeenEnemyWithOurFlag() {
-        return seenEnemyWithOurFlag;
-    }
 
     /**
      * Bot's preparation - called before the bot is connected to GB2004 and launched into UT2004.
@@ -112,6 +149,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     public void prepareBot(UT2004Bot bot) {
         // DEFINE WEAPON PREFERENCES
         initWeaponPreferences();
+
         // INITIALIZATION OF COMM MODULES
         commItems = new CTFCommItems<CTFBot>(this);
         commObjectUpdates = new CTFCommObjectUpdates<CTFBot>(this);
@@ -127,9 +165,6 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
 
         navigation.getPathExecutor().addStuckDetector(stuck);
         navigation.getPathExecutor().addStuckDetector(new AccUT2004DistanceStuckDetector(bot));
-
-
-
     }
 
     public boolean isFarFromBase(Item i) {
@@ -179,7 +214,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
                 .add(UT2004ItemType.SHOCK_RIFLE, true)
                 .add(UT2004ItemType.LIGHTNING_GUN, true)
                 .add(UT2004ItemType.ASSAULT_RIFLE, true)
-                .add(UT2004ItemType.ROCKET_LAUNCHER, true)  //TODO TRY LOCKET LAUNCHER THAN ASSAULT
+                .add(UT2004ItemType.ROCKET_LAUNCHER, true)
                 .add(UT2004ItemType.SHIELD_GUN, true);
 
         weaponPrefs.newPrefsRange(600)
@@ -240,7 +275,6 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
             log.warning("INITIALIZING MANUAL CONTROL WINDOW");
             manualControl = new ManualControl(bot, info, body, levelGeometryModule, draw, navPointVisibility, navMeshModule);
         }*/
-
     }
 
     // ==========================
@@ -248,9 +282,9 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     // ==========================
 
     /**
-     * Checking roles about bots in game. Especially when game started to get captain role!
+     * Check actual information about my team mates.
      *
-     * @param msg
+     * @param msg msg about my team mate.
      */
     @EventListener(eventClass = TCRoleUpdate.class)
     public void roleUpdate(TCRoleUpdate msg) {
@@ -272,7 +306,6 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         }
 
         myPlayers.sort(Comparator.comparingDouble(PlayerInfo::getDistance));
-
     }
 
     @EventListener(eventClass = TCFlager.class)
@@ -314,8 +347,6 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
 
         int damage = event.getDamage();
         Player botHurt = (Player) world.get(botHurtId); // MAY BE NULL!
-
-        log.info("OTHER HURT: " + damage + " DMG to " + botHurtId.getStringId() + " [type=" + event.getDamageType() + ", weapon=" + event.getWeaponName() + "]");
     }
 
     /**
@@ -333,9 +364,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
             UnrealId whoCauseDmgId = event.getInstigator();
             Player player = (Player) world.get(whoCauseDmgId); // MAY BE NULL!
 
-            //TODO test this
-            if (player != null) move.turnTo(player);
-            else move.turnHorizontal(180);
+            if (player == null) move.turnHorizontal(180);
 
             log.info("HURT: " + damage + " DMG done to ME [type=" + event.getDamageType()
                     + ", weapon=" + event.getWeaponName() + "] by " + whoCauseDmgId.getStringId());
@@ -422,7 +451,7 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
      * @param source
      */
     private void hearFocus(double noiseDistance, Location faceLocation, UnrealId source) {
-        if (noiseDistance < 2000) {
+        if (noiseDistance < HEARING_DISTANCE) {
             Location botLocation = info.getLocation();
             Location newLoc = botLocation.add(faceLocation.scale(noiseDistance));
 
@@ -445,8 +474,6 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         ItemType itemType = event.getType();
         ItemType.Group itemGroup = itemType.getGroup();
         ItemType.Category itemCategory = itemType.getCategory();
-
-        //   log.info("PICKED " + itemCategory.name + ": " + itemType.getName() + " [group=" + itemGroup.getName() + "]");
     }
 
     /**
@@ -461,7 +488,9 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         if (projectile.getLocation() == null) return;
         if (projectile.getType().compareTo(UT2004ItemType.ROCKET_LAUNCHER_PROJECTILE.getName()) != 0) return;
 
-        if (projectile.getLocation().getDistance(info.getLocation()) <= 500 && projectile.getOrigin().getDistance(info.getLocation()) > 300) {
+        /* Dodging for rocket's projectile */
+        if (projectile.getLocation().getDistance(info.getLocation()) <= 500
+                && projectile.getOrigin().getDistance(info.getLocation()) > 200) {
 
             Vector2D vecDirectionProj = new Vector2D(projectile.getOrigin().x - projectile.getLocation().x,
                     projectile.getOrigin().y - projectile.getLocation().y);
@@ -481,8 +510,6 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
                 if (loc != null) move.dodgeTo(loc, false);
             }
         }
-
-        //TODO TEST Rocket launcher dodging
     }
 
 
@@ -528,7 +555,6 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
 
         FlagInfo flag = event.getObject();
         if (flag.getTeam() == team) {
-            //TODO consider
             if (ctf.isOurFlagHome())
                 tcClient.sendToTeam(new TCEnemyUpdate(null));
 
@@ -617,13 +643,19 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
             //((Jump) o).setForce(0.0).setDoubleJump(false);
         });
 
-        CAN_USE_NAVIGATE = game.getMapName().toLowerCase().compareTo("ctf-citadel") != 0;
+        if (game.getMapName().toLowerCase().compareTo("ctf-citadel") == 0) {
+            CAN_USE_NAVIGATE = !existNavMeshCitadel;
+        } else {
+            CAN_USE_NAVIGATE = true;
+        }
+
+
         mapPlaces = new MapPlaces(navPoints, game.getMapName(), info.getTeam());
 
         // MOVING BEHAVIORS
         behaviorManager.suggestBehavior(new DefendBase(this));
         behaviorManager.suggestBehavior(new StealFlag(this));
-        behaviorManager.suggestBehavior(new BackFlag(this));
+        behaviorManager.suggestBehavior(new CaptureFlag(this));
         behaviorManager.suggestBehavior(new CollectItem(this));
         behaviorManager.suggestBehavior(new GetFlag(this));
         behaviorManager.suggestBehavior(new HuntEnemy(this));
@@ -681,34 +713,13 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     public void logic() {
         long logicStartTime = System.currentTimeMillis();
 
-
-
         if (tcClient.isConnected()) {
-            askForCaptain(getDistanceAStar(info.getNearestNavPoint(), ctf.getEnemyBase()));
+            sendMyInfo(getDistanceAStar(info.getNearestNavPoint(), ctf.getEnemyBase()));
         }
 
-        if (navigation.isNavigating() && navigation.getPathExecutor().getCurrentLink() != null) {
-            NavPoint nextNavPoint = navigation.getPathExecutor().getCurrentLink().getToNavPoint();
-            if (nextNavPoint != null && nextNavPoint.isTeleporter() && nextNavPoint.getLocation().getDistance(info.getLocation()) <= 250) {
-               /* if (CAN_USE_NAVIGATE) navigation.navigate(nextNavPoint);
-                else navigateAStarPath(nextNavPoint);*/
-                move.dodgeTo(nextNavPoint.getLocation(), false);
-            }
-        }
-
+        nearToTeleport();
         seenAnyFlag();
-
-        //TODO put to separated method + magic numbers!!
-        if (MapPlaces.isMapConc()) {
-            if (ctf.getOurBase().getLocation().getDistance(info.getLocation()) <= 180 ||
-                    navPoints.getNavPoint("CTF-BP2-Concentrate.JumpSpot2").getLocation().getDistance(info.getLocation()) <= 150
-                    || ctf.getEnemyBase().getLocation().getDistance(info.getLocation()) <= 180 ||
-                    navPoints.getNavPoint("CTF-BP2-Concentrate.JumpSpot11").getLocation().getDistance(info.getLocation()) <= 150) {
-                move.setSpeed(0.3);
-            } else {
-                move.setSpeed(1);
-            }
-        }
+        dangerLocationSlowDown();
 
         behaviorManager.execute();
 
@@ -783,6 +794,48 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         }
         List<NavPoint> coverPoints = new ArrayList<NavPoint>(visibility.getCoverNavPointsFrom(enemy.getLocation()));
         return fwMap.getNearestNavPoint(coverPoints, info.getNearestNavPoint());
+    }
+
+    /**
+     * Testing if file with navmesh for CTF-Citadel exists!
+     *
+     * @return true - file navmesh exists.
+     */
+    private static boolean existNavMeshFileCitadel(){
+        File navMeshFile = new File("navmesh/CTF-Citadel.navmesh");
+        if (navMeshFile == null) return false;
+
+        return navMeshFile.exists();
+    }
+
+    /**
+     * In CTF-BP2-Concentrate map, there are some dangerous area, so bot should slow down for a while.
+     */
+    private void dangerLocationSlowDown() {
+        if (MapPlaces.isMapConc()) {
+            if (ctf.getOurBase().getLocation().getDistance(info.getLocation()) <= 180 ||
+                    navPoints.getNavPoint("CTF-BP2-Concentrate.JumpSpot2").getLocation().getDistance(info.getLocation()) <= 150
+                    || ctf.getEnemyBase().getLocation().getDistance(info.getLocation()) <= 180 ||
+                    navPoints.getNavPoint("CTF-BP2-Concentrate.JumpSpot11").getLocation().getDistance(info.getLocation()) <= 150) {
+                move.setSpeed(0.3);
+            } else {
+                move.setSpeed(1);
+            }
+        }
+    }
+
+    /**
+     * In CTF-Citadel map, there are teleports, bot sometimes can not walk through it so he must dodge there
+     * (moveTo and new navigate does not work).
+     */
+    private void nearToTeleport() {
+        if (MapPlaces.isCit() && navigation.isNavigating() && navigation.getPathExecutor().getCurrentLink() != null) {
+            NavPoint nextNavPoint = navigation.getPathExecutor().getCurrentLink().getToNavPoint();
+            if (nextNavPoint != null && nextNavPoint.isTeleporter() && nextNavPoint.getLocation().getDistance(info.getLocation()) <= 250) {
+               /* smartNavigate(nextNavPoint.getLocation()); */
+                move.dodgeTo(nextNavPoint.getLocation(), false);
+            }
+        }
     }
 
     /**
@@ -936,41 +989,67 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
     // BOOT SYNCHRONIZATION
     // ===========
 
-    public TabooSet<Item> getTabooItems() {
-        return tabooItems;
-    }
-
+    /**
+     * Navigation to a destination according to available
+     *
+     * @param where final destination.
+     */
     public void smartNavigate(ILocated where) {
         if (CAN_USE_NAVIGATE) navigation.navigate(where);
         else navigateAStarPath(navPoints.getNearestNavPoint(where));
-       // drawPath(navigation.getPathExecutor().getPathFuture(), true);
-
     }
 
     public PlayerInfo getSeenEnemyFlag() {
         return seenEnemyFlag;
     }
 
-    private void askForCaptain(double distance) {
+    /**
+     * Send information about my location to others.
+     *
+     * @param distance distance to enemy base.
+     */
+    private void sendMyInfo(double distance) {
         tcClient.sendToTeam(new TCRoleUpdate(info.getId(), distance));
     }
 
+    /**
+     * @return get info about player who is flag holder now. Null - actually, no one is flag holder.
+     */
     public PlayerInfo getWhoIsFlagHolder() {
         return whoIsFlagHolder;
     }
 
+    /**
+     * Get info about enemy player who is flag holder.
+     *
+     * @return enemy flag holder info.
+     */
+    public PlayerInfo getSeenEnemyWithOurFlag() {
+        return seenEnemyWithOurFlag;
+    }
+
+    /**
+     * Checking if the ammo ratio for specific weapon is lower than specific ammo ratio.
+     *
+     * @param itemType specific weapon.
+     * @return true - has low ammo for specific weapon.
+     */
     public boolean hasLowAmmo(ItemType itemType) {
         double actual = weaponry.getPrimaryWeaponAmmo(itemType);
         double max = weaponry.getWeaponDescriptor(itemType).getPriMaxAmount();
         return ((actual / max) < LOW_AMMO_RATIO);
     }
 
+    /**
+     * Testing if any weapon in weaponry is ready for shooting (has some ammo).
+     *
+     * @return true - has ready some weapon.
+     */
     public boolean hasReadyAnyWeapon() {
         Map<ItemType, Weapon> weapons = weaponry.getWeapons();
         if (weapons == null) return false;
         if (weapons.isEmpty()) return false;
 
-        boolean ready = false;
         for (Map.Entry<ItemType, Weapon> i : weapons.entrySet()) {
             if (i.getKey() != UT2004ItemType.TRANSLOCATOR && i.getKey() != UT2004ItemType.SHIELD_GUN) {
                 if (weaponry.hasAmmoForWeapon(i.getKey())) return true;
@@ -981,6 +1060,12 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         return false;
     }
 
+    /**
+     * Computing bot rotation to specific player. Good for shooting with LIGHTING GUN.
+     *
+     * @param enemy usually enemy player.
+     * @return true - is enough rotated.
+     */
     public boolean isRotatedToEnemy(Player enemy) {
         if (enemy == null) return false;
         double diff = 0;
@@ -989,18 +1074,24 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         Location rotationVector = info.getRotation().toLocation().getNormalized();
         diff = (vecToTarget.sub(rotationVector)).getLength();
 
-        if (diff > 0.6) {
-            return false;
-        }
+        if (diff > 0.6) return false;
 
         return true;
     }
 
+    /**
+     * Get focus target to look around. Basically, it is target near to enemy base.
+     *
+     * @return location.
+     */
     public Location focusWalkEnemy() {
         return mapPlaces.walkFocusEnemy;
     }
 
 
+    /**
+     * If bot seen any flag on the way.
+     */
     public void seenAnyFlag() {
         if (ctf.getOurFlag().isVisible() && !ctf.isOurFlagHome()) {
             FlagInfo ourFlag = ctf.getOurFlag();
@@ -1013,10 +1104,20 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         }
     }
 
+    /**
+     * Get actual target from FOCUS behaviour.
+     *
+     * @return actual target.
+     */
     public Player getEnemyTarget() {
         return behaviorManager.getPlayerTarget();
     }
 
+    /**
+     * Test if the bot is the nearest to enemy base.
+     *
+     * @return true - is nearest.
+     */
     public boolean amINearest() {
         if (myPlayers.size() < 3) return false;
         if (amIFlagHolder()) return false;
@@ -1028,36 +1129,62 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         return myPlayers.get(0).getId().equals(info.getId());
     }
 
+    /**
+     * @return calculates bot health ratio.
+     */
     public double getHealthRatio() {
         return (info.getHealth() / info.game.getFullHealth());
     }
 
-
-    public Location getFocucDefending() {
+    /**
+     * Get focus target for defending
+     *
+     * @return location.
+     */
+    public Location getFocusDefending() {
         if (mapPlaces == null) return null;
         return mapPlaces.defendingFocus;
     }
 
+    /**
+     * Get location for defending base.
+     *
+     * @return location.
+     */
     public Location getDefendingPlace() {
         if (mapPlaces == null) return null;
         return mapPlaces.defendingPlace;
     }
 
+    /**
+     * Get place for hiding (if bot has flag and our flag is carried).
+     *
+     * @return location.
+     */
     public Location getHidingPlace() {
         if (mapPlaces == null) return null;
         return mapPlaces.hidingPlace;
     }
 
+    /**
+     * @return true - the bot should go for enemy flag.
+     */
     public boolean amIFlager() {
         if (myPlayers.isEmpty()) return false;
 
         return !amIDefender();
     }
 
+    /**
+     * @return true - the bot is carrying enemy flag.
+     */
     public boolean amIFlagHolder() {
         return ctf.isBotCarryingEnemyFlag();
     }
 
+    /**
+     * @return true - the bot should stay near to our base for defending.
+     */
     public boolean amIDefender() {
         if (myPlayers.isEmpty()) return false;
         if (myPlayers.size() < 2) return false;
@@ -1065,6 +1192,13 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
         return myPlayers.get(myPlayers.size() - 1).getId().equals(info.getId());
     }
 
+    /**
+     * Compute A* distance. The original one has bug in Pogamut (if the way does not exist).
+     *
+     * @param from start navpoint.
+     * @param to   final destination navpoint.
+     * @return distance from start to final destination due to A* algorithm.
+     */
     public double getDistanceAStar(NavPoint from, NavPoint to) {
         IPathFuture<NavPoint> path = getAStar().computePath(from, to);
         if (!path.isDone()) {
@@ -1107,8 +1241,12 @@ public class CTFBot extends UT2004BotTCController<UT2004Bot> {
             teamNum = Integer.valueOf(args[3]);
             String hostAdd = args[4];
 
+            existNavMeshCitadel = existNavMeshFileCitadel();
+
             UT2004TCServer.startTCServer();
-            new UT2004BotRunner(CTFBot.class, "PateraBOT").setMain(true).setHost(hostAdd).
+            new UT2004BotRunner(CTFBot.class, "PateraBOT").
+                    setMain(true)
+                    .setHost(hostAdd).
                     setLogLevel(Level.INFO).startAgents(teamNum);
         } catch (Exception ex) {
             System.err.println("Error while init bot! Probably bad parameters!");
